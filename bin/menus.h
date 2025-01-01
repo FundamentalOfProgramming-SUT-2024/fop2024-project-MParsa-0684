@@ -51,9 +51,9 @@ void main_menu() {
     attroff(A_BOLD);
 
     // Menu contents
-    char mainMenu[2][100] = {"Create new accout", "Login accout"}; 
+    char mainMenu[3][100] = {"Create new accout", "Login accout", "Exit"}; 
 
-    for(int i = 0; i < 2; i++) {
+    for(int i = 0; i < 3; i++) {
         move(16 + i, 65);
         addstr(mainMenu[i]);
     }
@@ -78,22 +78,21 @@ void main_menu() {
         
         switch (cursor) {
             case KEY_ENTER:
+                if(location == 2) {
+                    endwin();
+                    exit(0);
+                }
                 (* menus[location]) ();
                 // create_player();
                 break;
 
             case KEY_DOWN:
-                location = (location + 1) % 2;
+                location = (location + 1) % 3;
                 break;
 
             case KEY_UP:
-                location = (location - 1) % 2;
-                location = (location + 2) % 2;
-                break;
-
-            case 'q':
-                endwin();
-                exit(0);
+                location = (location - 1) % 3;
+                location = (location + 3) % 3;
                 break;
         }
 
@@ -167,7 +166,7 @@ void create_player() {
     }
 
     // saving new player
-    char file_path[200] = "players/";
+    char file_path[200] = "../players/";
     strcat(file_path, player->username);
     strcat(file_path, ".txt");
     strcpy(player->file_path, file_path);  
@@ -258,7 +257,7 @@ int check_player() {
     
     move(0, 1);
     attron(COLOR_PAIR(3) | A_BOLD);
-    char file_path[200] = "players/";
+    char file_path[200] = "../players/";
     strcat(file_path, player->username);
     strcat(file_path, ".txt");
     if(fopen(file_path, "r") != NULL) {
@@ -363,7 +362,7 @@ void official_login() {
     }
 
     // entering player arguments
-    char file_path[200] = "players/";
+    char file_path[200] = "../players/";
     strcat(file_path, usern);
     strcat(file_path, ".txt");
     strcpy(player->file_path, file_path);
@@ -380,7 +379,7 @@ void official_login() {
 
 // logging in guest player from login menu
 void guest_login() {
-    char file_path[200] = "players/";
+    char file_path[200] = "../players/";
     strcat(file_path, "guest");
     strcat(file_path, ".txt");
     strcpy(player->file_path, file_path);
@@ -401,7 +400,7 @@ int check_login(char *usern, char *passw) {
     attron(COLOR_PAIR(3) | A_BOLD);
 
     // check for player username
-    char file_path[200] = "players/";
+    char file_path[200] = "../players/";
     strcat(file_path, usern);
     strcat(file_path, ".txt");
     if(fopen(file_path, "r") == NULL) {
