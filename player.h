@@ -7,18 +7,20 @@
 #include <string.h>
 #include <stdbool.h>
 #include "ui.h"
+#include "menus.h"
+#include <regex.h>
 
 typedef struct Player {
-    FILE *player_file;
-    char *username;
-    char *password;
-    char *email;
+    char file_path[200];
+    char username[100];
+    char password[100];
+    char email[100];
 
     
 
 } Player;
 
-
+Player *player;
 
 
 #endif palyer_h

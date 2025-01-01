@@ -18,8 +18,9 @@ int main() {
     initscr();
     // clear_space();
     noecho();
-    // cbreak();
+    cbreak();
     // curs_set(FALSE);
+    keypad(stdscr, true);
     refresh();
 
     // Error for not supporting colors
