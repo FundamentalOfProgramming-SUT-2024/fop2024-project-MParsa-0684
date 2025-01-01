@@ -1,6 +1,6 @@
 /*
     ROGUE PROJECT
-    Author : MohammadParsa MahmoudabadiArani / 403106679
+    Author : MohammadParsa MahmoudabadiArani / 403106679 / 2024-2025
 
  */
 
@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "menus.h"
+#include <time.h>
+#include <dirent.h>
 
 void init_game();
 

@@ -9,6 +9,8 @@
 #include "ui.h"
 #include "player.h"
 #include <regex.h>
+#include <time.h>
+#include <dirent.h>
 
 void main_menu();
 void create_player();
@@ -18,6 +20,7 @@ void guest_login();
 void official_login();
 int check_login(char *usern, char *passw);
 void player_menu();
+void delete_enter(char *s);
 
 // Main menu of game
 void main_menu() {
@@ -370,6 +373,9 @@ void official_login() {
     fgets(player->username, 100, player_file);
     fgets(player->password, 100, player_file);
     fgets(player->email, 100, player_file);
+    delete_enter(player->username);
+    delete_enter(player->password);
+    delete_enter(player->email);
     // adding other arguments to player
 
     player_menu();
@@ -387,6 +393,9 @@ void guest_login() {
     fgets(player->username, 100, player_file);
     fgets(player->password, 100, player_file);
     fgets(player->email, 100, player_file);
+    delete_enter(player->username);
+    delete_enter(player->password);
+    delete_enter(player->email);
     // adding other arguments to player
 
     player_menu();
@@ -432,9 +441,99 @@ int check_login(char *usern, char *passw) {
 
 // player menu after logging in player
 void player_menu() {
+
+    // Initial setups
+    clear_space();
+    noecho();
+    curs_set(FALSE);
+    refresh();
+
+    // Header UI
+    move(12 ,69);
+    attron(A_BOLD | COLOR_PAIR(1));
+    addstr("REGUE GAME");
+    move(13 ,64 - ((int) strlen(player->username) / 2));
+    printw("<<<<< Welcome %s >>>>>", player->username);
+    attroff(A_BOLD);
+
+
+    // Menu contents
+    char playerMenu[5][100] = {"Create new game", "Continue old game", "Score table", "Settings", "Exit"}; 
+
+    for(int i = 0; i < 5; i++) {
+        move(16 + i, 65);
+        addstr(playerMenu[i]);
+    }
+    refresh();
+
+    // Selection Part
+    move(16, 69);
+    void (* pmenus[4]) () = {&new_game, &old_game, &score_table, &settings};
+    int location = 0;
+    move(16 + location, 65);
+    attron(COLOR_PAIR(2));
+    addstr(playerMenu[location]);
+    attroff(COLOR_PAIR(2));
     
+    while(true) {
+        int cursor = getch();
+
+        move(16 + location, 65);
+        attron(COLOR_PAIR(1));
+        addstr(playerMenu[location]);
+        attroff(COLOR_PAIR(1));
+        for(int i = 0; i < 5; i++) {
+            move(16 + i, 65);
+            addstr(playerMenu[i]);
+        }
+        refresh();
+        
+        switch (cursor) {
+            case KEY_ENTER:
+                if(location == 4) {
+                    main_menu();
+                }
+                getch();
+                (* pmenus[location]) ();
+                // create_player();
+                break;
+
+            case KEY_DOWN:
+                location = (location + 1) % 5;
+                break;
+
+            case KEY_UP:
+                location = (location - 1) % 5;
+                location = (location + 5) % 5;
+                break;
+        }
+
+        move(16 + location, 65);
+        attron(COLOR_PAIR(2));
+        addstr(playerMenu[location]);
+        attroff(COLOR_PAIR(2));
+
+        refresh();
+        // clear_space();
+        
+    }
+
 
 }
 
+void delete_enter(char *s) {
+    size_t len = strlen(s);
+    if(s[len - 1] == '\n')
+        s[len - 1] = '\0';
+}
 
-#endif
+/*
+
+    create new game
+    continue old game
+    score table
+    settings
+
+*/
+
+#endif menus_h
