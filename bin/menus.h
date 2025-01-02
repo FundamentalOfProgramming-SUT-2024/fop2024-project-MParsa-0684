@@ -20,7 +20,6 @@ void guest_login();
 void official_login();
 int check_login(char *usern, char *passw);
 void player_menu();
-void delete_enter(char *s);
 
 // Main menu of game
 void main_menu() {
@@ -174,8 +173,13 @@ void create_player() {
     strcat(file_path, ".txt");
     strcpy(player->file_path, file_path);  
     FILE* player_file = fopen(file_path, "w");
-    fprintf(player_file, "%s\n%s\n%s", player->username, player->password, player->email);
+    player->total_score = 0;
+    player->total_gold = 0;
+    player->num_finished = 0;
+    player->time_experience = time(NULL);
+    fprintf(player_file, "%s\n%s\n%s\n%d\n%d\n%d\n%ld\n", player->username, player->password, player->email, player->total_score, player->total_gold, player->num_finished, player->time_experience);
     fclose(player_file);
+    //adding new details
 
     player_menu();
 }
@@ -371,11 +375,19 @@ void official_login() {
     strcpy(player->file_path, file_path);
     FILE* player_file = fopen(player->file_path, "r");
     fgets(player->username, 100, player_file);
-    fgets(player->password, 100, player_file);
-    fgets(player->email, 100, player_file);
     delete_enter(player->username);
+    
+    fgets(player->password, 100, player_file);
     delete_enter(player->password);
+    
+    fgets(player->email, 100, player_file);
     delete_enter(player->email);
+    
+    fscanf(player_file, "%d", &(player->total_score));
+    fscanf(player_file, "%d", &(player->total_gold));
+    fscanf(player_file, "%d", &(player->num_finished));
+    fscanf(player_file, "%ld", &(player->time_experience));
+    fclose(player_file);
     // adding other arguments to player
 
     player_menu();
@@ -391,11 +403,19 @@ void guest_login() {
     strcpy(player->file_path, file_path);
     FILE* player_file = fopen(player->file_path, "r");
     fgets(player->username, 100, player_file);
-    fgets(player->password, 100, player_file);
-    fgets(player->email, 100, player_file);
     delete_enter(player->username);
+
+    fgets(player->password, 100, player_file);
     delete_enter(player->password);
+    
+    fgets(player->email, 100, player_file);
     delete_enter(player->email);
+
+    fscanf(player_file, "%d", &(player->total_score));
+    fscanf(player_file, "%d", &(player->total_gold));
+    fscanf(player_file, "%d", &(player->num_finished));
+    fscanf(player_file, "%ld", &(player->time_experience));
+    fclose(player_file);
     // adding other arguments to player
 
     player_menu();
@@ -478,6 +498,14 @@ void player_menu() {
     while(true) {
         int cursor = getch();
 
+        //Every move
+        clear_space();
+        move(12 ,69);
+        attron(A_BOLD | COLOR_PAIR(1));
+        addstr("REGUE GAME");
+        move(13 ,64 - ((int) strlen(player->username) / 2));
+        printw("<<<<< Welcome %s >>>>>", player->username);
+        attroff(A_BOLD);
         move(16 + location, 65);
         attron(COLOR_PAIR(1));
         addstr(playerMenu[location]);
@@ -493,9 +521,7 @@ void player_menu() {
                 if(location == 4) {
                     main_menu();
                 }
-                getch();
                 (* pmenus[location]) ();
-                // create_player();
                 break;
 
             case KEY_DOWN:
@@ -521,11 +547,7 @@ void player_menu() {
 
 }
 
-void delete_enter(char *s) {
-    size_t len = strlen(s);
-    if(s[len - 1] == '\n')
-        s[len - 1] = '\0';
-}
+
 
 /*
 
