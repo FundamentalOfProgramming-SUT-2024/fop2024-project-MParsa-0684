@@ -11,9 +11,21 @@
 #include <time.h>
 #include <regex.h>
 #include <dirent.h>
+#include <pthread.h>
 
+enum Difficulty {
+    Easy,
+    Normal,
+    Hard
+};
 
-typedef struct Game {
+typedef struct {
+    char music_path[200];
+    bool is_playing;
+    bool loop;
+} Music;
+
+typedef struct {
     char map[4][40][146];
     int visit[4][40][146];
     //  music
@@ -26,7 +38,7 @@ typedef struct Game {
 void create_new_game(Game **game);
 
 void create_new_game(Game **game) {
-    
+
 }
 
 

@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "ui.h"
 #include "player.h"
+#include "game.h"
 #include <regex.h>
 #include <time.h>
 #include <dirent.h>
@@ -36,12 +37,14 @@ void main_menu() {
     short r, g, b;
     hx(back_color, &r, &g, &b);
     init_color(COLOR_BLACK, r, g, b);
-    short rr, gg, bb;
-    hx(font_color, &rr, &gg, &bb);
-    init_color(COLOR_BLUE, rr, gg, bb);
+    hx(font_color, &r, &g, &b);
+    init_color(COLOR_BLUE, r, g, b);
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
     init_pair(2, COLOR_BLACK, COLOR_BLUE);
     init_pair(3, COLOR_RED, COLOR_BLUE);
+    
+
+
     bkgd(COLOR_PAIR(1));
     
     // Header UI
@@ -176,9 +179,14 @@ void create_player() {
     player->total_score = 0;
     player->total_gold = 0;
     player->num_finished = 0;
+    player->game_difficulty = Easy;
+    player->color = COLOR_FIREBRICK;
+    player->music = (Music *) malloc(sizeof(Music));
+    strcpy(player->music->music_path, "../music/05 Aen Seidhe.mp3");
     player->time_experience = time(NULL);
-    fprintf(player_file, "%s\n%s\n%s\n%d\n%d\n%d\n%ld\n", player->username, player->password, player->email, player->total_score, player->total_gold, player->num_finished, player->time_experience);
+    fprintf(player_file, "%s\n%s\n%s\n%d\n%d\n%d\n%ld\n%d\n%d\n%s\n", player->username, player->password, player->email, player->total_score, player->total_gold, player->num_finished, player->time_experience, player->game_difficulty, player->color, player->music->music_path);
     fclose(player_file);
+
     //adding new details
 
     player_menu();
@@ -387,6 +395,11 @@ void official_login() {
     fscanf(player_file, "%d", &(player->total_gold));
     fscanf(player_file, "%d", &(player->num_finished));
     fscanf(player_file, "%ld", &(player->time_experience));
+    fscanf(player_file, "%d", &(player->game_difficulty));
+    fscanf(player_file, "%d", &(player->color));
+    player->music = (Music *) malloc(sizeof(Music));
+    fgets(player->music->music_path, 100, player_file);
+    delete_enter(player->music->music_path);
     fclose(player_file);
     // adding other arguments to player
 
@@ -415,6 +428,11 @@ void guest_login() {
     fscanf(player_file, "%d", &(player->total_gold));
     fscanf(player_file, "%d", &(player->num_finished));
     fscanf(player_file, "%ld", &(player->time_experience));
+    fscanf(player_file, "%d", &(player->game_difficulty));
+    fscanf(player_file, "%d", &(player->color));
+    player->music = (Music *) malloc(sizeof(Music));
+    fgets(player->music->music_path, 100, player_file);
+    delete_enter(player->music->music_path);
     fclose(player_file);
     // adding other arguments to player
 
@@ -534,6 +552,20 @@ void player_menu() {
                 break;
         }
 
+        //Every move
+        clear_space();
+        move(12 ,69);
+        attron(A_BOLD | COLOR_PAIR(1));
+        addstr("REGUE GAME");
+        move(13 ,64 - ((int) strlen(player->username) / 2));
+        printw("<<<<< Welcome %s >>>>>", player->username);
+        attroff(A_BOLD);
+        move(16 + location, 65);
+        for(int i = 0; i < 5; i++) {
+            move(16 + i, 65);
+            addstr(playerMenu[i]);
+        }
+        refresh();
         move(16 + location, 65);
         attron(COLOR_PAIR(2));
         addstr(playerMenu[location]);
