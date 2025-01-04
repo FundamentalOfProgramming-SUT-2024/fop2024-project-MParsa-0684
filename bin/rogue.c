@@ -19,6 +19,7 @@ int main() {
 
     initscr();
     // clear_space();
+    srand(time(0));
     noecho();
     cbreak();
     // curs_set(FALSE);

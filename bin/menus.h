@@ -146,13 +146,38 @@ void create_player() {
         refresh();
         
         // password
+        move(0, 1);
+        attron(COLOR_PAIR(3) | A_BOLD);
+        addstr("To get random password, write 'RANDOM' and press ENTER!!");
+        attroff(COLOR_PAIR(3) | A_BOLD);
+
         attron(A_BOLD);
         mvaddstr(lct++, 65, "Enter your Password :");
-        move(lct++, 65);
+        move(lct, 65);
         attroff(A_BOLD);
         getstr(player->password);
         refresh();
-        
+
+        // Getting Random Password
+        if(strcmp(player->password, "RANDOM") == 0) {
+            char random[11];
+            for(int i = 0; i < 10; i++) {
+                char ran = rand() % 126;
+                ran = (ran + 33) % 126;
+                ran = (ran < 33) ? ran + 33 : ran;
+                random[i] = ran;
+            }
+            random[10] = '\0';
+            strcpy(player->password, random);
+        }
+        move(lct, 65);
+        addstr(player->password);
+        lct++;
+        move(0, 1);
+        attron(COLOR_PAIR(3) | A_BOLD);
+        addstr("                                                        ");
+        attroff(COLOR_PAIR(3) | A_BOLD);
+
         // email
         attron(A_BOLD);
         mvaddstr(lct++, 65, "Enter your E-mail :");
@@ -574,7 +599,6 @@ void player_menu() {
 
 
 }
-
 
 
 /*
