@@ -29,11 +29,7 @@ typedef struct {
     int color;
     Music *music;
 
-
-    Game *old_game;
-    Game *current_game;
-
-
+    Game *game;
 
 } Player;
 
@@ -48,12 +44,31 @@ void change_music();
 
 Player *player;
 
+// Creating and playing new game
 void new_game() {
+    move(0, 1);
+    attron(COLOR_PAIR(3) | A_BOLD);
+    addstr("Your old game will be deleted, Press ENTER to continue, Press q to comeback...");
+    attroff(COLOR_PAIR(3) | A_BOLD);
+
+    int c = getch();
+    while(c != 'q' && c != KEY_ENTER)
+        c = getch();
+
+    if(c == 'q')
+        return ;
     
-}
-void old_game() {
+    create_new_game(&player->game);
+    play_game(player->game);
 
 }
+
+// Playing old game
+void old_game() {
+    play_game(player->game);
+}
+
+// Score table 
 void score_table() {
     // Initial setups
     noecho();
@@ -364,6 +379,8 @@ void change_difficulty() {
 
 
 }
+
+// Change player color
 void change_color() {
     // Initial setups
     noecho();
@@ -442,6 +459,8 @@ void change_color() {
     }
 
 }
+
+// Chnage game music
 void change_music() {
     
 
@@ -475,6 +494,10 @@ void change_music() {
         strcat(arr[m_size - 1], entry_name);
     }
     closedir(dir);
+    m_size++;
+    muMenu = (char **) realloc(muMenu, m_size * sizeof(char *));
+    muMenu[m_size - 1] = (char *) malloc(100 * sizeof(char));
+    strcpy(muMenu[m_size - 1], "None"); 
 
     for(int i = 0; i < m_size; i++) {
         move(18 + i, 88);
@@ -508,7 +531,10 @@ void change_music() {
 
         switch(cursor) {
             case KEY_ENTER:
-                strcpy(player->music->music_path,arr[location]);
+                if(location == m_size - 1) 
+                    strcpy(player->music->music_path, "NULL");
+                else 
+                    strcpy(player->music->music_path,arr[location]);
                 flag = false;
                 break;
 

@@ -114,8 +114,6 @@ void main_menu() {
     
 }
 
-
-
 // Creating new player
 void create_player() {
     // noecho();
@@ -191,7 +189,6 @@ void create_player() {
 
     player_menu();
 }
-
 
 // Logging in an player
 void login_player() {
@@ -330,7 +327,6 @@ int check_player() {
     return 1;
 
 }
-
 
 // loggging in official player from login menu
 void official_login() {

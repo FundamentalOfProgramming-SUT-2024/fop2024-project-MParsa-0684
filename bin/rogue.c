@@ -50,8 +50,5 @@ int main() {
 }
 
 void init_game(){
-    while (true)
-    {
-        main_menu();
-    }
+    main_menu();
 }
