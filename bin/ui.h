@@ -83,6 +83,14 @@ void clear_space() {
         move(41, i);
         addch(' ');
     }
+    for(int j = 0; j < 42; j++) {
+        move(j, 0);
+        addch(' ');
+    }
+    for(int j = 0; j < 42; j++) {
+        move(j, 147);
+        addch(' ');
+    }
     attroff(COLOR_PAIR(2));
 }
 

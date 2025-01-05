@@ -58,7 +58,8 @@ void new_game() {
     if(c == 'q')
         return ;
     
-    create_new_game(&player->game);
+
+    create_new_game(&player->game, player->music, player->game_difficulty, player->color);
     play_game(player->game);
 
 }

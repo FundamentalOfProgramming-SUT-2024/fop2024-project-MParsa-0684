@@ -13,6 +13,8 @@
 #include <dirent.h>
 #include <pthread.h>
 
+
+
 // Initial structs
 typedef struct Music{
     char music_path[200];
@@ -136,8 +138,11 @@ typedef struct Spell {
 
 } Spell;
 
+
 // Game places
 typedef struct Room {
+    Location start;
+    Location size;
     Room_Type type;
     Normal_Door *normal_doors;
     Trap *traps;
@@ -151,47 +156,141 @@ typedef struct Room {
 
 } Room;
 
+
 typedef struct Floor {
     char map[40][146];
     char visit[40][146];
-    Room Rooms[6];
+    Room *Rooms;
+    int room_num;
 
 } Floor;
 
 
 typedef struct Game{
     char name[100];
-    Floor floors[4];
-    Location player;
+    Floor *floors;
+    Location location;
     int floor_num;
     int Health;
     int total_score;
     Food **foods;
     Gold **golds;
-    Gun **gun;
-    Spell **spell;
+    Gun ***gun;
+    Spell ***spell;
     int food_num;
     int gold_num;
-    int gun_num;
-    int spell_num;
+    int *gun_num;
+    int *spell_num;
 
     Music *music;
     enum Difficulty game_difficulty;
     int player_color;
-    
 
 } Game;
 
-void create_new_game(Game **game);
 void play_game(Game *game);
+void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int color);
+void create_new_floor(Floor *floor);
+void create_new_room(Room *room, Floor *floor);
 
 
-void create_new_game(Game **game) {
+// For creating new game
+void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int color) {
+    
+    // Initial Setup
+    echo();
+    clear_space();
+    refresh();
     (*game) = (Game *) malloc(sizeof(Game));
     
+    move(20, 60);
+    attron(A_BOLD | COLOR_PAIR(1));
+    addstr("Enter name for new game : ");
+    attroff(A_BOLD | COLOR_PAIR(1));
+    move(21, 60);
+    getstr((*game)->name);
+    clear_space();
+    refresh();
+
+    // Defines
+    (*game)->floors = (Floor *) malloc(4 * sizeof(Floor));
+    (*game)->floor_num = 4;
+    
+    (*game)->Health = 100;
+    (*game)->total_score = 0;
+    
+    (*game)->foods = NULL;
+    (*game)->food_num = 0;
+
+    (*game)->golds = NULL;
+    (*game)->gold_num = 0;
+
+    (*game)->gun = (Gun ***) malloc(5 * sizeof(Gun **));
+    (*game)->gun_num = (int *) calloc(5, sizeof(int));
+
+    (*game)->spell = (Spell ***) malloc(3 * sizeof(Spell **));
+    (*game)->spell_num = (int *) calloc(3, sizeof(int));
+
+    (*game)->music = (Music *) malloc(sizeof(Music));
+    strcpy((*game)->music->music_path, music->music_path);
+    (*game)->game_difficulty = difficulty;
+    (*game)->player_color = color;
+
+
+    for(int i = 0; i < 4; i++)
+        create_new_floor(&((*game)->floors[i]));
+
+    while(true) {
+        (*game)->location.y = (rand() % 40) + 1;
+        (*game)->location.x = (rand() % 146) + 1;
+        if((*game)->floors->map[(*game)->location.y][(*game)->location.x] == '.')
+            break; 
+    }
+
+
 
 }
 
+
+// Creating new floor
+void create_new_floor(Floor *floor) {
+    floor->Rooms = (Room *) malloc(6 * sizeof(Room));
+    floor->room_num = 6;
+
+    for(int i = 0; i < 6; i++) {
+        create_new_room(&(floor->Rooms[i]), floor);
+        // adding to the map
+    }
+}
+
+
+// Creating new room
+void create_new_room(Room *room, Floor *floor) {
+
+    bool flag = true;
+    while(flag) {
+        room->start.y = (rand() % 40) + 1;
+        room->start.x = (rand() % 146) + 1;
+        room->size.y = (rand() % 5) + 4;
+        room->size.x = (rand() % 7) + 4;
+
+        flag = false;
+        for(int i = room->start.y; i < room->start.y + room->size.y; i++) {
+            for(int j = room->start.x; j < room->start.x + room->size.x; j++) {
+                if(floor->map[i][j] == '|' || floor->map[i][j] == '_' || floor->map[i][j] == '.') {
+                    flag = true;
+                    goto brk;
+                }
+            }
+        }
+        brk:
+    }
+
+    
+}
+
+
+// Playing game
 void play_game(Game *game) {
 
 }
