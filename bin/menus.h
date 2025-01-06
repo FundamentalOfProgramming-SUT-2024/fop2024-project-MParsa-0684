@@ -12,6 +12,8 @@
 #include <regex.h>
 #include <time.h>
 #include <dirent.h>
+#include <locale.h>
+
 
 void main_menu();
 void create_player();
@@ -30,6 +32,7 @@ void main_menu() {
     noecho();
     // cbreak();
     curs_set(FALSE);
+    setlocale(LC_ALL, "");
     refresh();
 
     // Page UI
@@ -51,6 +54,8 @@ void main_menu() {
     move(12 ,69);
     attron(A_BOLD | COLOR_PAIR(1));
     addstr("REGUE GAME");
+    // move(11, 69);
+    // printw("%lc",L'\u2696');
     move(13 ,63);
     addstr("<<<<< Main  Menu >>>>>");
     attroff(A_BOLD);

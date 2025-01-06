@@ -13,6 +13,8 @@
 #include <dirent.h>
 #include <pthread.h>
 #include "game.h"
+#include <locale.h>
+
 
 
 

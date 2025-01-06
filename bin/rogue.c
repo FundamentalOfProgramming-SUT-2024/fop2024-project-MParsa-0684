@@ -12,6 +12,7 @@
 #include "menus.h"
 #include <time.h>
 #include <dirent.h>
+#include <locale.h>
 
 void init_game();
 
@@ -19,6 +20,7 @@ int main() {
 
     initscr();
     // clear_space();
+    setlocale(LC_ALL, "");
     srand(time(0));
     noecho();
     cbreak();

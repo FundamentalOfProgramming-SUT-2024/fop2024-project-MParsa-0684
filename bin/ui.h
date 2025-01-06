@@ -6,6 +6,8 @@
 #include <string.h>
 #include <ncurses.h>
 #include "menus.h"
+#include <locale.h>
+
 
 #define back_color "#c2eefc"
 #define font_color "#046d8f"
