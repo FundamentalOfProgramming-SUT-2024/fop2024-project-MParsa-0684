@@ -14,7 +14,7 @@
 #include <pthread.h>
 #include "game.h"
 #include <locale.h>
-
+#include <wchar.h>
 
 
 

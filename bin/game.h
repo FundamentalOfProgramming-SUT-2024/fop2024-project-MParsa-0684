@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <pthread.h>
 #include <locale.h>
+#include <wchar.h>
 
 
 
@@ -486,6 +487,8 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
 
 
+    // Normal Door configuration
+    
 
 }
 

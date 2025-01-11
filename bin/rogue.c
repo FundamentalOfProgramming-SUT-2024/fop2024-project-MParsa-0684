@@ -13,6 +13,7 @@
 #include <time.h>
 #include <dirent.h>
 #include <locale.h>
+#include <wchar.h>
 
 void init_game();
 
@@ -27,6 +28,8 @@ int main() {
     // curs_set(FALSE);
     keypad(stdscr, true);
     refresh();
+
+
 
     // Error for not supporting colors
     if(has_colors() == false) {

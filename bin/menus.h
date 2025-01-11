@@ -13,6 +13,7 @@
 #include <time.h>
 #include <dirent.h>
 #include <locale.h>
+#include <wchar.h>
 
 
 void main_menu();
@@ -28,6 +29,7 @@ void player_menu();
 void main_menu() {
 
     // Initial setups
+    // setlocale(LC_ALL, "");
     clear_space();
     noecho();
     // cbreak();
@@ -54,8 +56,10 @@ void main_menu() {
     move(12 ,69);
     attron(A_BOLD | COLOR_PAIR(1));
     addstr("REGUE GAME");
-    // move(11, 69);
-    // printw("%lc",L'\u2696');
+
+    // wchar_t gold = 0x0001F312;
+    mvprintw(3, 3, "◌");
+
     move(13 ,63);
     addstr("<<<<< Main  Menu >>>>>");
     attroff(A_BOLD);
