@@ -58,7 +58,7 @@ void main_menu() {
     addstr("REGUE GAME");
 
     // wchar_t gold = 0x0001F312;
-    mvprintw(3, 3, "◌");
+    // mvprintw(3, 3, "◌");
 
     move(13 ,63);
     addstr("<<<<< Main  Menu >>>>>");
@@ -214,7 +214,7 @@ void create_player() {
     player->game_difficulty = Easy;
     player->color = COLOR_FIREBRICK;
     player->music = (Music *) malloc(sizeof(Music));
-    strcpy(player->music->music_path, "../music/05 Aen Seidhe.mp3");
+    strcpy(player->music->music_path, "../music/05 Aen Seidhe.mp3");
     player->time_experience = time(NULL);
     fprintf(player_file, "%s\n%s\n%s\n%d\n%d\n%d\n%ld\n%d\n%d\n%s\n", player->username, player->password, player->email, player->total_score, player->total_gold, player->num_finished, player->time_experience, player->game_difficulty, player->color, player->music->music_path);
     fclose(player_file);
@@ -619,4 +619,4 @@ void player_menu() {
 
 */
 
-#endif menus_h
+#endif

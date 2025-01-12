@@ -22,7 +22,7 @@ int main() {
     initscr();
     // clear_space();
     setlocale(LC_ALL, "");
-    srand(time(0));
+    srand(time(NULL));
     noecho();
     cbreak();
     // curs_set(FALSE);

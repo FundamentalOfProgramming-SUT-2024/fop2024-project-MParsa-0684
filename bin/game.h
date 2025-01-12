@@ -14,6 +14,8 @@
 #include <pthread.h>
 #include <locale.h>
 #include <wchar.h>
+#include <unistd.h>
+
 
 
 
@@ -57,12 +59,18 @@ typedef enum Gold_Type {
 } Gold_Type;
 
 typedef enum Gun_Type {
-    Mace = 0x2696, 
-    Dagger = 0x1F5E1,
-    Magic_Wand = 0x1FA84,
-    Normal_Arrow = 0x27B3,
-    Sword = 0x2694
+    Mace, 
+    Dagger,
+    Magic_Wand,
+    Normal_Arrow,
+    Sword
 } Gun_Type;
+
+// Mace = 0x2696, 
+// Dagger = 0x1F5E1,
+// Magic_Wand = 0x1FA84,
+// Normal_Arrow = 0x27B3,
+// Sword = 0x2694
 
 typedef enum Spell_Type {
     Health, 
@@ -74,7 +82,7 @@ typedef enum Spell_Type {
 
 // Room contents
 typedef struct Normal_Door {
-    Location Location;
+    Location location;
 
 
 } Normal_Door;
@@ -103,6 +111,7 @@ typedef struct Secret_Door {
 
 typedef struct Locked_Door {
     Location location;
+    Location password_location;
     int password;
     wchar_t unicode;
 
@@ -155,10 +164,11 @@ typedef struct Room {
     Location size;
     Room_Type type;
     
-    Normal_Door *normal_doors;
+    Normal_Door *normal_door;
     Staircase *staircase;
-    Secret_Door *secret_doors;
-    Locked_Door *locked_doors;
+    Secret_Door *secret_door;
+    Locked_Door *locked_door;
+    Master_Key *master_key;
     
     Trap **traps;
     int trap_num;
@@ -186,6 +196,8 @@ typedef struct Floor {
     Room *Rooms;
     int room_num;
     int has_gold;
+    int staircase_num;
+    int master_key_num;
 
 } Floor;
 
@@ -193,7 +205,8 @@ typedef struct Floor {
 typedef struct Game{
     char name[100];
     Floor *floors;
-    Location location;
+    Location player_location;
+    int player_floor;
     int floor_num;
     int Health;
     int total_score;
@@ -216,6 +229,7 @@ void play_game(Game *game);
 void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int color);
 void create_new_floor(Floor *floor, int floor_num, Game *game);
 void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game *game);
+int in_room_road(Floor *floor, Location *current, Location *end, int back_dir);
 
 
 // For creating new game
@@ -225,7 +239,8 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
     echo();
     clear_space();
     refresh();
-    (*game) = (Game *) malloc(sizeof(Game));
+    srand(time(NULL));
+    (*game) = (Game *) calloc(1, sizeof(Game));
     
     move(20, 60);
     attron(A_BOLD | COLOR_PAIR(1));
@@ -237,7 +252,7 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
     refresh();
 
     // Defines
-    (*game)->floors = (Floor *) malloc(4 * sizeof(Floor));
+    (*game)->floors = (Floor *) calloc(4, sizeof(Floor));
     (*game)->floor_num = 4;
     
     (*game)->Health = 100;
@@ -249,25 +264,32 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
     (*game)->golds = NULL;
     (*game)->gold_num = 0;
 
-    (*game)->gun = (Gun ***) malloc(5 * sizeof(Gun **));
+    (*game)->gun = (Gun ***) calloc(5, sizeof(Gun **));
     (*game)->gun_num = (int *) calloc(5, sizeof(int));
 
-    (*game)->spell = (Spell ***) malloc(3 * sizeof(Spell **));
+    (*game)->spell = (Spell ***) calloc(3, sizeof(Spell **));
     (*game)->spell_num = (int *) calloc(3, sizeof(int));
 
-    (*game)->music = (Music *) malloc(sizeof(Music));
+    (*game)->music = (Music *) calloc(1, sizeof(Music));
     strcpy((*game)->music->music_path, music->music_path);
     (*game)->game_difficulty = difficulty;
     (*game)->player_color = color;
 
 
-    for(int i = 0; i < 4; i++)
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 40; j++) {
+            for(int k = 0; k < 146; k++)
+                (*game)->floors[i].map[j][k] = ' ';
+        }
         create_new_floor(&((*game)->floors[i]), i, (*game));
+    }
 
     while(true) {
-        (*game)->location.y = (rand() % 40) + 1;
-        (*game)->location.x = (rand() % 146) + 1;
-        if((*game)->floors->map[(*game)->location.y][(*game)->location.x] == '.')
+        (*game)->player_location.y = (rand() % 40);
+        (*game)->player_location.x = (rand() % 146);
+        int i = (*game)->player_location.y;
+        int j = (*game)->player_location.x;
+        if((*game)->floors->map[i][j] == '.' && !((i >= (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.y && i < ((*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.y + (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].size.y)) && (j >= (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.x && j < ((*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.x + (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].size.x))))
             break; 
     }
 
@@ -275,44 +297,72 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
 
 }
 
-
 // Creating new floor
 void create_new_floor(Floor *floor, int floor_num, Game *game) {
-    floor->Rooms = (Room *) malloc(6 * sizeof(Room));
+    srand(time(NULL));
+    floor->Rooms = (Room *) calloc(6, sizeof(Room));
     floor->room_num = 6;
     if(floor_num == 3)
         floor->has_gold = rand() % 6;
+    else 
+        floor->has_gold = -1;
     
+    floor->staircase_num = rand() % 6;
+    floor->master_key_num = rand() % 6;
 
     for(int i = 0; i < 6; i++) {
         create_new_room(&(floor->Rooms[i]), floor, floor_num, i, game);
         // adding to the map
     }
-}
 
+    for(int i = 0; i < 6; i++) {
+        Location *current = &(floor->Rooms[i].normal_door->location);
+        Location *end = &(floor->Rooms[(i + 1) % 6].normal_door->location);
+
+        Location dir[4] = {
+            {1, 0}, 
+            {0, 1},
+            {-1, 0}, 
+            {0, -1}
+        };
+
+        for(int j = 0; j < 4; j++) {
+            if((current->y + dir[j].y) < 0 || (current->y + dir[j].y) >= 40 || (current->x + dir[j].x) < 0 || (current->x + dir[j].x) >= 146)
+                continue;
+
+            if(floor->map[current->y + dir[j].y][current->x + dir[j].x] == ' ' || floor->map[current->y + dir[j].y][current->x + dir[j].x] == '#' || floor->map[current->y + dir[j].y][current->x + dir[j].x] == '+') {
+                Location new = {current->x + dir[j].x, current->y + dir[j].y};
+                int flag = in_room_road(floor, &new, end, (j + 2) % 4);
+                if(flag == 1) {
+                    break;
+                }
+            }
+        }
+        
+    }
+    
+}
 
 // Creating new room
 void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game *game) {
 
-
     // Room configuration
     bool flag = true;
+    srand(time(NULL));
     while(flag) {
-        room->start.y = (rand() % 40) + 1;
-        room->start.x = (rand() % 146) + 1;
-        room->size.y = (rand() % 5) + 4;
-        room->size.x = (rand() % 7) + 4;
+        room->start.y = (rand() % 40);
+        room->start.x = (rand() % 146);
+        room->size.y = (rand() % 10) + 5;
+        room->size.x = (rand() % 14) + 5;
 
         flag = false;
         for(int i = room->start.y; i < room->start.y + room->size.y; i++) {
             for(int j = room->start.x; j < room->start.x + room->size.x; j++) {
-                if(floor->map[i][j] == '|' || floor->map[i][j] == '_' || floor->map[i][j] == '.' || i > 146 || j > 40) {
+                if(i >= 40 || j >= 146 || floor->map[i][j] == '|' || floor->map[i][j] == '_' || floor->map[i][j] == '.') {
                     flag = true;
-                    goto brk;
                 }
             }
         }
-        brk:
     }
 
     for(int i = room->start.y + 1; i < room->start.y + room->size.y - 1; i++) {
@@ -323,16 +373,18 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     for(int i = room->start.y; i < room->start.y + room->size.y; i++)
         floor->map[i][room->start.x] = '|', floor->map[i][room->start.x + room->size.x - 1] = '|';
     for(int j = room->start.x; j < room->start.x + room->size.x; j++)
-        floor->map[j][room->start.y] = '_', floor->map[j][room->start.y + room->size.y - 1] = '_';
+        floor->map[room->start.y][j] = '_', floor->map[room->start.y + room->size.y - 1][j] = '_';
     
+    srand(time(NULL));
     if(floor_num == 3 && room_num == floor->has_gold)
         room->type = Treasure;
     else {
-        Room_Type type[9] = {General, Enchant, General, General, Nightmare, General, General, Nightmare, Enchant};
+        Room_Type type[9] = {General, Enchant, General, General, Nightmare, General, General, Nightmare, General};
         int rtype = rand() % 9;
         room->type = type[rtype];
     }
 
+    srand(time(NULL));
     switch(room->type) {
         case Treasure:
             room->trap_num = rand() % 3;
@@ -357,15 +409,17 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 
 
     // Food configuration
-    room->foods = (Food **) malloc((room->food_num) * sizeof(Food *));
+    srand(time(NULL));
+    room->foods = (Food **) calloc((room->food_num), sizeof(Food *));
     Food_Type ftype[7] = {Ordinary, Excellent, Ordinary, Magical, Toxic, Ordinary, Ordinary};
     for(int i = 0; i < room->food_num; i++) {
         int ft = rand() % 7;
+        room->foods[i] = (Food *) calloc(1, sizeof(Food));
         room->foods[i]->type = ftype[ft];
         bool flag = true;
         while(flag) {
-            room->foods[i]->location.y = rand() % (room->size.y - 1) + room->start.y + 1; 
-            room->foods[i]->location.x = rand() % (room->size.x - 1) + room->start.x + 1; 
+            room->foods[i]->location.y = (rand() % (room->size.y - 1)) + room->start.y + 1; 
+            room->foods[i]->location.x = (rand() % (room->size.x - 1)) + room->start.x + 1; 
             if(floor->map[room->foods[i]->location.y][room->foods[i]->location.x] == '.') {
                 flag = false;
                 floor->map[room->foods[i]->location.y][room->foods[i]->location.x] = 'F';
@@ -388,10 +442,12 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
 
     // Gold configuration
-    room->golds = (Gold **) malloc((room->gold_num) * sizeof(Gold *));
+    srand(time(NULL));
+    room->golds = (Gold **) calloc((room->gold_num), sizeof(Gold *));
     Gold_Type Gtype[7] = {Regular, Regular, Regular, Regular, Black, Black, Regular};
     for(int i = 0; i < room->gold_num; i++) {
         int Gt = rand() % 7;
+        room->golds[i] = (Gold *) calloc(1, sizeof(Gold));
         room->golds[i]->type = Gtype[Gt];
         bool flag = true;
         while(flag) {
@@ -413,10 +469,12 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
 
     // Gun configuration
-    room->guns = (Gun **) malloc((room->gun_num) * sizeof(Gun *));
+    srand(time(NULL));
+    room->guns = (Gun **) calloc((room->gun_num), sizeof(Gun *));
     Gun_Type gtype[4] = {Dagger, Magic_Wand, Normal_Arrow, Sword};
     for(int i = 0; i < room->gun_num; i++) {
         int gt = rand() % 4;
+        room->guns[i] = (Gun *) calloc(1, sizeof(Gun));
         room->guns[i]->type = gtype[gt];
         bool flag = true;
         while(flag) {
@@ -426,6 +484,9 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                 flag = false;
                 floor->map[room->guns[i]->location.y][room->guns[i]->location.x] = 'g';
                 switch(room->guns[i]->type) {
+                    case Mace:
+                        //unicode
+                        break;
                     case Dagger:
                         //unicode
                         break;
@@ -444,10 +505,12 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
     
     // Spell configuration
-    room->spells = (Spell **) malloc((room->spell_num) * sizeof(Spell *));
+    srand(time(NULL));
+    room->spells = (Spell **) calloc((room->spell_num), sizeof(Spell *));
     Spell_Type stype[3] = {Health, Speed, Damage};
     for(int i = 0; i < room->spell_num; i++) {
         int st = rand() % 3;
+        room->spells[i] = (Spell *) calloc(1, sizeof(Spell));
         room->spells[i]->type = stype[st];
         bool flag = true;
         while(flag) {
@@ -472,15 +535,17 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
 
     // Trap configuration
-    room->traps = (Trap **) malloc((room->trap_num) * sizeof(Trap *));
+    srand(time(NULL));
+    room->traps = (Trap **) calloc((room->trap_num), sizeof(Trap *));
     for(int i = 0; i < room->trap_num; i++) {
+        room->traps[i] = (Trap *) calloc(1, sizeof(Trap));
         bool flag = true;
         while(flag) {
             room->traps[i]->location.y = rand() % (room->size.y - 1) + room->start.y + 1; 
             room->traps[i]->location.x = rand() % (room->size.x - 1) + room->start.x + 1; 
             if(floor->map[room->traps[i]->location.y][room->traps[i]->location.x] == '.') {
                 flag = false;
-                floor->map[room->traps[i]->location.y][room->traps[i]->location.x] = 't';
+                floor->map[room->traps[i]->location.y][room->traps[i]->location.x] = '^';
                 // unicode
             }
         }
@@ -488,15 +553,125 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 
 
     // Normal Door configuration
+    srand(time(NULL));
+    room->normal_door = (Normal_Door *) calloc(1, sizeof(Normal_Door));
+    flag = true;
+    while(flag) {
+        room->normal_door->location.y = rand() % (room->size.y) + room->start.y;
+        room->normal_door->location.x = rand() % (room->size.x) + room->start.x;
+        if(floor->map[room->normal_door->location.y][room->normal_door->location.x] == '|' || floor->map[room->normal_door->location.y][room->normal_door->location.x] == '_') {
+            flag = false;
+            floor->map[room->normal_door->location.y][room->normal_door->location.x] = '+';
+        }
+    }
+
+    // Staircase
+    srand(time(NULL));
+    room->staircase = (Staircase *) calloc(1, sizeof(Staircase));
+    if(room_num == floor->staircase_num) {
+        bool flag = true;
+        while(flag) {
+            room->staircase->location.y = rand() % (room->size.y - 1) + room->start.y + 1; 
+            room->staircase->location.x = rand() % (room->size.x - 1) + room->start.x + 1; 
+            if(floor->map[room->staircase->location.y][room->staircase->location.x] == '.') {
+                flag = false;
+                floor->map[room->staircase->location.y][room->staircase->location.x] = '<';
+                // unicode
+            }
+        }
+
+    }
+    else {
+        room->staircase = NULL;
+    }
     
+    // Master Key
+    srand(time(NULL));
+    room->master_key = (Master_Key *) calloc(1, sizeof(Master_Key));
+    if(room_num == floor->master_key_num) {
+        bool flag = true;
+        while(flag) {
+            room-> master_key->location.y = rand() % (room->size.y - 1) + room->start.y + 1; 
+            room-> master_key->location.x = rand() % (room->size.x - 1) + room->start.x + 1; 
+            if(floor->map[room->master_key->location.y][room->master_key->location.x] == '.') {
+                flag = false;
+                floor->map[room->master_key->location.y][room->master_key->location.x] = 'M';
+                // unicode
+            }
+        }
+    }
+    else {
+        room->master_key = NULL;
+    }
+
+    // Locked, Secret Doors
 
 }
 
+// Creating In_Room roads
+int in_room_road(Floor *floor, Location *current, Location *end, int back_dir) {
+    if(current->y == end->y && current->x == end->x)
+        return 1;
+
+    Location dir[4] = {
+        {1, 0}, 
+        {0, 1},
+        {-1, 0}, 
+        {0, -1}
+    };
+    for(int i = 0; i < 4; i++) {
+        if(i == back_dir || (current->y + dir[i].y) < 0 || (current->y + dir[i].y) >= 40 || (current->x + dir[i].x) < 0 ||( current->x + dir[i].x) >= 146)
+            continue;
+
+
+        if(floor->map[current->y + dir[i].y][current->x + dir[i].x] == ' ' || floor->map[current->y + dir[i].y][current->x + dir[i].x] == '#' || floor->map[current->y + dir[i].y][current->x + dir[i].x] == '+') {
+            Location new = {current->x + dir[i].x, current->y + dir[i].y};
+            int flag = in_room_road(floor, &new, end, ((i + 2) % 4));
+            if(flag == 1) {
+                floor->map[current->y][current->x] = '#';
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+
+
+}
 
 // Playing game
 void play_game(Game *game) {
 
+    // clear_space();
+
+    short r, g, b;
+    hx(back_color, &r, &g, &b);
+    init_color(COLOR_BLACK, r, g, b);
+    short rr, gg, bb;
+    hx(font_color, &rr, &gg, &bb);
+    init_color(COLOR_BLUE, rr, gg, bb);
+    init_pair(1, COLOR_BLUE, COLOR_BLACK);
+    init_pair(2, COLOR_BLACK, COLOR_BLUE);
+
+    WINDOW *game_window = newwin(40, 146, 1, 1);
+    wclear(game_window);
+    for(int i = 0; i < 40; i++) {
+        // move(i + 1, 1);
+        printf(" ");
+        for(int j = 0; j < 146; j++) {
+            wattron(game_window, COLOR_PAIR(1));
+            // wmove(game_window, i + 1, j + 1);
+            mvwaddch(game_window, i, j, game->floors[0].map[i][j]);
+            wattroff(game_window, COLOR_PAIR(1));
+            wrefresh(game_window);
+        }
+        // printf(" ");
+    }
+    delwin(game_window);
+
+    sleep(5);
+
 }
 
 
-#endif game_h
+#endif
