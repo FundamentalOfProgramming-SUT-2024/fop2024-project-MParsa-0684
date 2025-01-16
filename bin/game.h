@@ -164,9 +164,8 @@ typedef struct Room {
     Location size;
     Room_Type type;
     
-    Normal_Door *normal_door;
-    Staircase *staircase;
     Secret_Door *secret_door;
+    Staircase *staircase;
     Locked_Door *locked_door;
     Master_Key *master_key;
     
@@ -185,6 +184,8 @@ typedef struct Room {
     Spell **spells;
     int spell_num;
 
+    Normal_Door *normal_doors;
+    int normal_doors_num;
     //Enemy ....
 
 } Room;
@@ -229,7 +230,7 @@ void play_game(Game *game);
 void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int color);
 void create_new_floor(Floor *floor, int floor_num, Game *game);
 void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game *game);
-int in_room_road(Floor *floor, Location *current, Location *end, int back_dir);
+void in_room_road(Floor *floor);
 
 
 // For creating new game
@@ -315,31 +316,83 @@ void create_new_floor(Floor *floor, int floor_num, Game *game) {
         // adding to the map
     }
 
-    for(int i = 0; i < 6; i++) {
-        Location *current = &(floor->Rooms[i].normal_door->location);
-        Location *end = &(floor->Rooms[(i + 1) % 6].normal_door->location);
 
-        Location dir[4] = {
-            {1, 0}, 
-            {0, 1},
-            {-1, 0}, 
-            {0, -1}
-        };
 
-        for(int j = 0; j < 4; j++) {
-            if((current->y + dir[j].y) < 0 || (current->y + dir[j].y) >= 40 || (current->x + dir[j].x) < 0 || (current->x + dir[j].x) >= 146)
-                continue;
+    {// bool visited[6] = {1, 0, 0, 0, 0, 0};
+    // for(int i = 1; i < 6; i++) {
+    //     Location current ={floor->Rooms[i - 1].start.x + (floor->Rooms[i - 1].size.x / 2), floor->Rooms[i - 1].start.y + (floor->Rooms[i - 1].size.y / 2)};
+    //     Location center = {floor->Rooms[i].start.x + (floor->Rooms[i].size.x / 2), floor->Rooms[i].start.y + (floor->Rooms[i].size.y / 2)};
 
-            if(floor->map[current->y + dir[j].y][current->x + dir[j].x] == ' ' || floor->map[current->y + dir[j].y][current->x + dir[j].x] == '#' || floor->map[current->y + dir[j].y][current->x + dir[j].x] == '+') {
-                Location new = {current->x + dir[j].x, current->y + dir[j].y};
-                int flag = in_room_road(floor, &new, end, (j + 2) % 4);
-                if(flag == 1) {
-                    break;
-                }
-            }
-        }
+    //     Location dist = {center.x - current.x, center.y - current.y};
+    //     if(dist.x > 0) {
+    //         while(current.x < center.x) {
+    //             if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#')
+    //                 floor->map[current.y][current.x] = '#';
+    //             else if(floor->map[current.y][current.x] == '|' || floor->map[current.y][current.x] == '_' || floor->map[current.y][current.x] == '+')
+    //                 floor->map[current.y][current.x] = '+';
+    //             current.x++;
+    //         }
+    //     }
+    //     else {
+    //         while(current.x > center.x) {
+    //             if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#')
+    //                 floor->map[current.y][current.x] = '#';
+    //             else if(floor->map[current.y][current.x] == '|' || floor->map[current.y][current.x] == '_' || floor->map[current.y][current.x] == '+')
+    //                 floor->map[current.y][current.x] = '+';
+    //             current.x--;
+    //         }
+    //     }
+
+    //     if(dist.y > 0) {
+    //         while(current.y < center.y) {
+    //             if(floor->map[current.y][current.y] == ' ' || floor->map[current.y][current.y] == '#')
+    //                 floor->map[current.y][current.y] = '#';
+    //             else if(floor->map[current.y][current.y] == '|' || floor->map[current.y][current.y] == '_' || floor->map[current.y][current.y] == '+')
+    //                 floor->map[current.y][current.y] = '+';
+    //             current.y++;
+    //         }
+    //     }
+    //     else {
+    //         while(current.y > center.y) {
+    //             if(floor->map[current.y][current.y] == ' ' || floor->map[current.y][current.y] == '#')
+    //                 floor->map[current.y][current.y] = '#';
+    //             else if(floor->map[current.y][current.y] == '|' || floor->map[current.y][current.y] == '_' || floor->map[current.y][current.y] == '+')
+    //                 floor->map[current.y][current.y] = '+';
+    //             current.y--;
+    //         }
+    //     }
+
+    // }
+
+    // for(int i = 0; i < 6; i++) {
+    //     Location *current = &(floor->Rooms[i].normal_door->location);
+    //     Location *end = &(floor->Rooms[(i + 1) % 6].normal_door->location);
+
+    //     Location dir[4] = {
+    //         {1, 0}, 
+    //         {0, 1},
+    //         {-1, 0}, 
+    //         {0, -1}
+    //     };
+
+    //     for(int j = 0; j < 4; j++) {
+    //         if((current->y + dir[j].y) < 0 || (current->y + dir[j].y) >= 40 || (current->x + dir[j].x) < 0 || (current->x + dir[j].x) >= 146)
+    //             continue;
+
+    //         if(floor->map[current->y + dir[j].y][current->x + dir[j].x] == ' ' || floor->map[current->y + dir[j].y][current->x + dir[j].x] == '#' || floor->map[current->y + dir[j].y][current->x + dir[j].x] == '+') {
+    //             Location new = {current->x + dir[j].x, current->y + dir[j].y};
+    //             int flag = in_room_road(floor, &new, end, (j + 2) % 4);
+    //             if(flag == 1) {
+    //                 break;
+    //             }
+    //         }
+    //     }
+    
         
-    }
+    // }
+}
+
+    in_room_road(floor);
     
 }
 
@@ -350,15 +403,15 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     bool flag = true;
     srand(time(NULL));
     while(flag) {
-        room->start.y = (rand() % 40);
-        room->start.x = (rand() % 146);
+        room->start.y = (rand() % 39) + 1;
+        room->start.x = (rand() % 145) + 1;
         room->size.y = (rand() % 10) + 5;
         room->size.x = (rand() % 14) + 5;
 
         flag = false;
-        for(int i = room->start.y; i < room->start.y + room->size.y; i++) {
-            for(int j = room->start.x; j < room->start.x + room->size.x; j++) {
-                if(i >= 40 || j >= 146 || floor->map[i][j] == '|' || floor->map[i][j] == '_' || floor->map[i][j] == '.') {
+        for(int i = room->start.y; i < room->start.y + room->size.y + 1 && i < 40; i++) {
+            for(int j = room->start.x; j < room->start.x + room->size.x + 1 && j < 146; j++) {
+                if(i >= 39 || j >= 145 || floor->map[i][j] == '|' || floor->map[i][j] == '_' || floor->map[i][j] == '.') {
                     flag = true;
                 }
             }
@@ -387,7 +440,9 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     srand(time(NULL));
     switch(room->type) {
         case Treasure:
+            srand(time(NULL));
             room->trap_num = rand() % 3;
+            srand(time(NULL));
             room->gold_num = rand() % 4;
             break;
         
@@ -397,10 +452,15 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 
         case Nightmare:
         case General:
+            srand(time(NULL));
             room->food_num = rand() % (game->game_difficulty);
+            srand(time(NULL));
             room->gold_num = rand() % (game->game_difficulty);
+            srand(time(NULL));
             room->gun_num = rand() % 2;
+            srand(time(NULL));
             room->spell_num = rand() % 2;
+            srand(time(NULL));
             room->trap_num = rand() % 2;
             break;
 
@@ -409,10 +469,10 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 
 
     // Food configuration
-    srand(time(NULL));
     room->foods = (Food **) calloc((room->food_num), sizeof(Food *));
     Food_Type ftype[7] = {Ordinary, Excellent, Ordinary, Magical, Toxic, Ordinary, Ordinary};
     for(int i = 0; i < room->food_num; i++) {
+        srand(time(NULL));
         int ft = rand() % 7;
         room->foods[i] = (Food *) calloc(1, sizeof(Food));
         room->foods[i]->type = ftype[ft];
@@ -442,10 +502,10 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
 
     // Gold configuration
-    srand(time(NULL));
     room->golds = (Gold **) calloc((room->gold_num), sizeof(Gold *));
     Gold_Type Gtype[7] = {Regular, Regular, Regular, Regular, Black, Black, Regular};
     for(int i = 0; i < room->gold_num; i++) {
+        srand(time(NULL));
         int Gt = rand() % 7;
         room->golds[i] = (Gold *) calloc(1, sizeof(Gold));
         room->golds[i]->type = Gtype[Gt];
@@ -469,10 +529,10 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
 
     // Gun configuration
-    srand(time(NULL));
     room->guns = (Gun **) calloc((room->gun_num), sizeof(Gun *));
     Gun_Type gtype[4] = {Dagger, Magic_Wand, Normal_Arrow, Sword};
     for(int i = 0; i < room->gun_num; i++) {
+        srand(time(NULL));
         int gt = rand() % 4;
         room->guns[i] = (Gun *) calloc(1, sizeof(Gun));
         room->guns[i]->type = gtype[gt];
@@ -505,10 +565,10 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
     
     // Spell configuration
-    srand(time(NULL));
     room->spells = (Spell **) calloc((room->spell_num), sizeof(Spell *));
     Spell_Type stype[3] = {Health, Speed, Damage};
     for(int i = 0; i < room->spell_num; i++) {
+        srand(time(NULL));
         int st = rand() % 3;
         room->spells[i] = (Spell *) calloc(1, sizeof(Spell));
         room->spells[i]->type = stype[st];
@@ -535,9 +595,9 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
 
     // Trap configuration
-    srand(time(NULL));
     room->traps = (Trap **) calloc((room->trap_num), sizeof(Trap *));
     for(int i = 0; i < room->trap_num; i++) {
+        srand(time(NULL));
         room->traps[i] = (Trap *) calloc(1, sizeof(Trap));
         bool flag = true;
         while(flag) {
@@ -551,19 +611,18 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
         }
     }
 
-
     // Normal Door configuration
-    srand(time(NULL));
-    room->normal_door = (Normal_Door *) calloc(1, sizeof(Normal_Door));
-    flag = true;
-    while(flag) {
-        room->normal_door->location.y = rand() % (room->size.y) + room->start.y;
-        room->normal_door->location.x = rand() % (room->size.x) + room->start.x;
-        if(floor->map[room->normal_door->location.y][room->normal_door->location.x] == '|' || floor->map[room->normal_door->location.y][room->normal_door->location.x] == '_') {
-            flag = false;
-            floor->map[room->normal_door->location.y][room->normal_door->location.x] = '+';
-        }
-    }
+    // srand(time(NULL));
+    // room->normal_door = (Normal_Door *) calloc(1, sizeof(Normal_Door));
+    // flag = true;
+    // while(flag) {
+    //     room->normal_door->location.x = rand() % (room->size.x) + room->start.x;
+    //     room->normal_door->location.y = rand() % (room->size.y) + room->start.y;
+    //     if(floor->map[room->normal_door->location.y][room->normal_door->location.x] == '|' || floor->map[room->normal_door->location.y][room->normal_door->location.x] == '_') {
+    //         flag = false;
+    //         floor->map[room->normal_door->location.y][room->normal_door->location.x] = '+';
+    //     }
+    // }
 
     // Staircase
     srand(time(NULL));
@@ -609,35 +668,90 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 }
 
 // Creating In_Room roads
-int in_room_road(Floor *floor, Location *current, Location *end, int back_dir) {
-    if(current->y == end->y && current->x == end->x)
-        return 1;
+void in_room_road(Floor *floor) {
 
-    Location dir[4] = {
-        {1, 0}, 
-        {0, 1},
-        {-1, 0}, 
-        {0, -1}
-    };
-    for(int i = 0; i < 4; i++) {
-        if(i == back_dir || (current->y + dir[i].y) < 0 || (current->y + dir[i].y) >= 40 || (current->x + dir[i].x) < 0 ||( current->x + dir[i].x) >= 146)
-            continue;
+    for(int i = 1; i < 6; i++) {
+        Location current ={floor->Rooms[i - 1].start.x + (floor->Rooms[i - 1].size.x / 2), floor->Rooms[i - 1].start.y + (floor->Rooms[i - 1].size.y / 2)};
+        Location end = {floor->Rooms[i].start.x + (floor->Rooms[i].size.x / 2), floor->Rooms[i].start.y + (floor->Rooms[i].size.y / 2)};
+    
+        int dx = end.x - current.x;
+        int ctr = 0;
+        if(dx > 0) {
+            while(current.x < end.x) {
+                if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#') 
+                    floor->map[current.y][current.x] = '#';
+                else if((floor->map[current.y][current.x] == '_' && floor->map[current.y][current.x - 1] == '#') || (floor->map[current.y][current.x] == '|')) {
+                    floor->map[current.y][current.x] = '+';
+                    // bool flag = false;
+                    // for(int j = 0; j < 6 && !flag; j++) {
+                    //     if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
+                    //         floor->Rooms[j].normal_doors_num++;
+                    //         floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
+                    //         floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location = {current.x, current.y};
+                    //         flag = true;
+                    //     }
+                    // }
+                }
+                current.x++;
+                ctr++;
+                if(ctr % 8 == 0 && floor->map[current.y][current.x - 1] != '+') {
+                    srand(time(NULL));
+                    int r = rand() % 2;
+                    if(r == 0 && current.y < 39 && floor->map[current.y + 1][current.x] != '_' && floor->map[current.y + 1][current.x] != '|')
+                        current.y++;
+                    else if(r == 1 && current.y > 0 && floor->map[current.y - 1][current.x] != '_' && floor->map[current.y - 1][current.x] != '|')
+                        current.y--;
+                    current.x--;
+                }
+            }
+        }
+        else if (dx < 0){
+            while(current.x > end.x) {
+                if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#')
+                    floor->map[current.y][current.x] = '#';
+                else if((floor->map[current.y][current.x] == '_' && (floor->map[current.y][current.x + 1] == '#')) || (floor->map[current.y][current.x] == '|')) 
+                    floor->map[current.y][current.x] = '+';
+                current.x--;
+                ctr++;
+                if(ctr % 8 == 0 && floor->map[current.y][current.x + 1] != '+') {
+                    srand(time(NULL));
+                    int r = rand() % 2;
+                    if(r == 0 && current.y < 39 && floor->map[current.y + 1][current.x] != '_' && floor->map[current.y + 1][current.x] != '|')
+                        current.y++;
+                    else if(r == 1 && current.y > 0 && floor->map[current.y - 1][current.x] != '_' && floor->map[current.y - 1][current.x] != '|')
+                        current.y--;
+                    current.x++;
+                }
+            }
+        }
 
 
-        if(floor->map[current->y + dir[i].y][current->x + dir[i].x] == ' ' || floor->map[current->y + dir[i].y][current->x + dir[i].x] == '#' || floor->map[current->y + dir[i].y][current->x + dir[i].x] == '+') {
-            Location new = {current->x + dir[i].x, current->y + dir[i].y};
-            int flag = in_room_road(floor, &new, end, ((i + 2) % 4));
-            if(flag == 1) {
-                floor->map[current->y][current->x] = '#';
-                return 1;
+        int dy = end.y - current.y;
+        if(dy > 0) {
+            while(current.y < end.y) {
+                if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#') 
+                    floor->map[current.y][current.x] = '#';
+                else if(floor->map[current.y][current.x] == '_')
+                    floor->map[current.y][current.x] = '+';
+                current.y++;
+            }
+        }
+        else if(dy < 0) {
+            while(current.y > end.y) {
+                if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#') 
+                    floor->map[current.y][current.x] = '#';
+                else if(floor->map[current.y][current.x] == '_')
+                    floor->map[current.y][current.x] = '+';
+                current.y--;
             }
         }
     }
 
-    return 0;
 
 
 }
+
+
 
 // Playing game
 void play_game(Game *game) {
@@ -665,11 +779,21 @@ void play_game(Game *game) {
             wattroff(game_window, COLOR_PAIR(1));
             wrefresh(game_window);
         }
-        // printf(" ");
+        printf(" ");
     }
-    delwin(game_window);
 
-    sleep(5);
+    delwin(game_window);
+    
+
+    FILE* f = fopen("map.txt", "w");
+    for(int i = 0; i < 40; i++) {
+        for(int j = 0; j < 146; j++) {
+            fprintf(f, "%c", game->floors[0].map[i][j]);   
+        }
+        fprintf(f, "\n");
+    }
+    fclose(f);
+    sleep(10);
 
 }
 
