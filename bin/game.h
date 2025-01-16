@@ -208,6 +208,8 @@ typedef struct Game{
     Floor *floors;
     Location player_location;
     int player_floor;
+    int player_room;
+
     int floor_num;
     int Health;
     int total_score;
@@ -290,8 +292,22 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
         (*game)->player_location.x = (rand() % 146);
         int i = (*game)->player_location.y;
         int j = (*game)->player_location.x;
-        if((*game)->floors->map[i][j] == '.' && !((i >= (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.y && i < ((*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.y + (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].size.y)) && (j >= (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.x && j < ((*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.x + (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].size.x))))
+        if((*game)->floors->map[i][j] == '.' && 
+        !((i >= (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.y 
+        && i < ((*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.y 
+        + (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].size.y)) 
+        && (j >= (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.x 
+        && j < ((*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.x 
+        + (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].size.x))))
             break; 
+    }
+
+    (*game)->player_floor = 0;
+    for(int i = 0; i < 6; i++) {
+        if((*game)->player_location.x >= (*game)->floors[0].Rooms[i].start.x && (*game)->player_location.x < (*game)->floors[0].Rooms[i].start.x + (*game)->floors[0].Rooms[i].size.x && (*game)->player_location.y >= (*game)->floors[0].Rooms[i].start.y && (*game)->player_location.y < (*game)->floors[0].Rooms[i].start.y + (*game)->floors[0].Rooms[i].size.y) {
+            (*game)->player_room = i;
+            break;
+        }
     }
 
 
@@ -316,7 +332,7 @@ void create_new_floor(Floor *floor, int floor_num, Game *game) {
         // adding to the map
     }
 
-
+    in_room_road(floor);
 
     {// bool visited[6] = {1, 0, 0, 0, 0, 0};
     // for(int i = 1; i < 6; i++) {
@@ -387,12 +403,10 @@ void create_new_floor(Floor *floor, int floor_num, Game *game) {
     //             }
     //         }
     //     }
-    
-        
+            
     // }
 }
 
-    in_room_road(floor);
     
 }
 
@@ -681,16 +695,41 @@ void in_room_road(Floor *floor) {
                 if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#') 
                     floor->map[current.y][current.x] = '#';
                 else if((floor->map[current.y][current.x] == '_' && floor->map[current.y][current.x - 1] == '#') || (floor->map[current.y][current.x] == '|')) {
+                    if((floor->map[current.y][current.x] == '_' && floor->map[current.y][current.x - 1] == '#')) {
+                        if(current.y > 0 && (floor->map[current.y - 1][current.x] == '|' || floor->map[current.y - 1][current.x] == '+'))
+                            current.y--, floor->map[current.y][current.x - 1] = '#';
+                        else if(current.y < 39 && (floor->map[current.y + 1][current.x] == '|' || floor->map[current.y - 1][current.x] == '+'))
+                            current.y++, floor->map[current.y][current.x - 1] = '#';
+                    }
+
                     floor->map[current.y][current.x] = '+';
-                    // bool flag = false;
-                    // for(int j = 0; j < 6 && !flag; j++) {
-                    //     if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
-                    //         floor->Rooms[j].normal_doors_num++;
-                    //         floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
-                    //         floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location = {current.x, current.y};
-                    //         flag = true;
-                    //     }
-                    // }
+                    bool flag = false;
+                    for(int j = 0; j < 6 && !flag; j++) {
+                        if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
+                            floor->Rooms[j].normal_doors_num++;
+                            floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
+                            floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.x = current.x;
+                            floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.y = current.y;
+                            flag = true;
+                        }
+                    }
+    // WINDOW *game_window = newwin(40, 146, 1, 1);
+    // wclear(game_window);
+    // for(int i = 0; i < 40; i++) {
+    //     // move(i + 1, 1);
+    //     printf(" ");
+    //     for(int j = 0; j < 146; j++) {
+    //         wattron(game_window, COLOR_PAIR(1));
+    //         // wmove(game_window, i + 1, j + 1);
+    //         mvwaddch(game_window, i, j, floor->map[i][j]);
+    //         wattroff(game_window, COLOR_PAIR(1));
+    //         wrefresh(game_window);
+    //     }
+    //     printf(" ");
+    // }
+
+    // delwin(game_window);
+    // sleep(1);
                 }
                 current.x++;
                 ctr++;
@@ -709,8 +748,27 @@ void in_room_road(Floor *floor) {
             while(current.x > end.x) {
                 if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#')
                     floor->map[current.y][current.x] = '#';
-                else if((floor->map[current.y][current.x] == '_' && (floor->map[current.y][current.x + 1] == '#')) || (floor->map[current.y][current.x] == '|')) 
+                else if((floor->map[current.y][current.x] == '_' && (floor->map[current.y][current.x + 1] == '#')) || (floor->map[current.y][current.x] == '|'))  {
+                    if((floor->map[current.y][current.x] == '_' && floor->map[current.y][current.x + 1] == '#')) {
+                        if(current.y > 0 && (floor->map[current.y - 1][current.x] == '|' || floor->map[current.y - 1][current.x] == '+'))
+                            current.y--, floor->map[current.y][current.x + 1] = '#';
+                        else if(current.y < 39 && (floor->map[current.y - 1][current.x] == '|' || floor->map[current.y - 1][current.x] == '+'))
+                            current.y++, floor->map[current.y][current.x + 1] = '#';
+                    }
+
                     floor->map[current.y][current.x] = '+';
+                    bool flag = false;
+                    for(int j = 0; j < 6 && !flag; j++) {
+                        if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
+                            floor->Rooms[j].normal_doors_num++;
+                            floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
+                            floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.x = current.x;
+                            floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.y = current.y;
+                            flag = true;
+                        }
+                    }
+
+                }
                 current.x--;
                 ctr++;
                 if(ctr % 8 == 0 && floor->map[current.y][current.x + 1] != '+') {
@@ -722,6 +780,23 @@ void in_room_road(Floor *floor) {
                         current.y--;
                     current.x++;
                 }
+    //                 WINDOW *game_window = newwin(40, 146, 1, 1);
+    // wclear(game_window);
+    // for(int i = 0; i < 40; i++) {
+    //     // move(i + 1, 1);
+    //     printf(" ");
+    //     for(int j = 0; j < 146; j++) {
+    //         wattron(game_window, COLOR_PAIR(1));
+    //         // wmove(game_window, i + 1, j + 1);
+    //         mvwaddch(game_window, i, j, floor->map[i][j]);
+    //         wattroff(game_window, COLOR_PAIR(1));
+    //         wrefresh(game_window);
+    //     }
+    //     printf(" ");
+    // }
+
+    // delwin(game_window);
+    // sleep(1);
             }
         }
 
@@ -731,18 +806,74 @@ void in_room_road(Floor *floor) {
             while(current.y < end.y) {
                 if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#') 
                     floor->map[current.y][current.x] = '#';
-                else if(floor->map[current.y][current.x] == '_')
+                else if(floor->map[current.y][current.x] == '_' || floor->map[current.y][current.x] == '+') {
                     floor->map[current.y][current.x] = '+';
+                    bool flag = false;
+                    for(int j = 0; j < 6 && !flag; j++) {
+                        if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
+                            floor->Rooms[j].normal_doors_num++;
+                            floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
+                            floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.x = current.x;
+                            floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.y = current.y;
+                            flag = true;
+                        }
+                    }
+                }
                 current.y++;
+    //                 WINDOW *game_window = newwin(40, 146, 1, 1);
+    // wclear(game_window);
+    // for(int i = 0; i < 40; i++) {
+    //     // move(i + 1, 1);
+    //     printf(" ");
+    //     for(int j = 0; j < 146; j++) {
+    //         wattron(game_window, COLOR_PAIR(1));
+    //         // wmove(game_window, i + 1, j + 1);
+    //         mvwaddch(game_window, i, j, floor->map[i][j]);
+    //         wattroff(game_window, COLOR_PAIR(1));
+    //         wrefresh(game_window);
+    //     }
+    //     printf(" ");
+    // }
+
+    // delwin(game_window);
+    // sleep(1);
             }
         }
         else if(dy < 0) {
             while(current.y > end.y) {
                 if(floor->map[current.y][current.x] == ' ' || floor->map[current.y][current.x] == '#') 
                     floor->map[current.y][current.x] = '#';
-                else if(floor->map[current.y][current.x] == '_')
+                else if(floor->map[current.y][current.x] == '_' || floor->map[current.y][current.x] == '+') {
                     floor->map[current.y][current.x] = '+';
+                    bool flag = false;
+                    for(int j = 0; j < 6 && !flag; j++) {
+                        if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
+                            floor->Rooms[j].normal_doors_num++;
+                            floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
+                            floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.x = current.x;
+                            floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.y = current.y;
+                            flag = true;
+                        }
+                    }
+                }
                 current.y--;
+    //                 WINDOW *game_window = newwin(40, 146, 1, 1);
+    // wclear(game_window);
+    // for(int i = 0; i < 40; i++) {
+    //     // move(i + 1, 1);
+    //     printf(" ");
+    //     for(int j = 0; j < 146; j++) {
+    //         wattron(game_window, COLOR_PAIR(1));
+    //         // wmove(game_window, i + 1, j + 1);
+    //         mvwaddch(game_window, i, j, floor->map[i][j]);
+    //         wattroff(game_window, COLOR_PAIR(1));
+    //         wrefresh(game_window);
+    //     }
+    //     printf(" ");
+    // }
+
+    // delwin(game_window);
+    // sleep(1);
             }
         }
     }
@@ -751,27 +882,19 @@ void in_room_road(Floor *floor) {
 
 }
 
-
-
 // Playing game
 void play_game(Game *game) {
 
-    // clear_space();
+    //Initial Setups
+    clear_space2();
+    setlocale(LC_ALL, "");
 
-    short r, g, b;
-    hx(back_color, &r, &g, &b);
-    init_color(COLOR_BLACK, r, g, b);
-    short rr, gg, bb;
-    hx(font_color, &rr, &gg, &bb);
-    init_color(COLOR_BLUE, rr, gg, bb);
-    init_pair(1, COLOR_BLUE, COLOR_BLACK);
-    init_pair(2, COLOR_BLACK, COLOR_BLUE);
-
+    // Game Window
     WINDOW *game_window = newwin(40, 146, 1, 1);
     wclear(game_window);
     for(int i = 0; i < 40; i++) {
         // move(i + 1, 1);
-        printf(" ");
+        // printf(" ");
         for(int j = 0; j < 146; j++) {
             wattron(game_window, COLOR_PAIR(1));
             // wmove(game_window, i + 1, j + 1);
@@ -779,21 +902,22 @@ void play_game(Game *game) {
             wattroff(game_window, COLOR_PAIR(1));
             wrefresh(game_window);
         }
-        printf(" ");
+        // printf(" ");
     }
 
-    delwin(game_window);
+    move(41, 1);
     
+    refresh();
+    
+    // Player
+    wattron(game_window, COLOR_PAIR((*game).player_color) | A_BLINK | A_BOLD);
 
-    FILE* f = fopen("map.txt", "w");
-    for(int i = 0; i < 40; i++) {
-        for(int j = 0; j < 146; j++) {
-            fprintf(f, "%c", game->floors[0].map[i][j]);   
-        }
-        fprintf(f, "\n");
-    }
-    fclose(f);
-    sleep(10);
+    mvwaddch(game_window, (*game).player_location.y, (*game).player_location.x, 'P');
+    wattroff(game_window, COLOR_PAIR((*game).player_color) | A_BLINK | A_BOLD);  
+    wrefresh(game_window);
+    delwin(game_window);
+    sleep(12);
+
 
 }
 

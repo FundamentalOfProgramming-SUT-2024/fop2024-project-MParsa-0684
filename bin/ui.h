@@ -96,6 +96,46 @@ void clear_space() {
     attroff(COLOR_PAIR(2));
 }
 
+void clear_space2() {
+
+    short r, g, b;
+    hx(back_color, &r, &g, &b);
+    init_color(COLOR_BLACK, r, g, b);
+    short rr, gg, bb;
+    hx(font_color, &rr, &gg, &bb);
+    init_color(COLOR_BLUE, rr, gg, bb);
+    init_pair(1, COLOR_BLUE, COLOR_BLACK);
+    init_pair(2, COLOR_BLACK, COLOR_BLUE);
+
+    hx(back_color, &r, &g, &b);
+    init_color(COLOR_BLACK, r, g, b);
+
+    hx(font_color, &rr, &gg, &bb);
+    init_color(COLOR_BLUE, rr, gg, bb);
+    init_pair(1, COLOR_BLUE, COLOR_BLACK);
+    init_pair(2, COLOR_BLACK, COLOR_BLUE);
+
+    hx(Firebrick_color, &r, &g, &b);
+    init_color(COLOR_FIREBRICK, r, g, b);
+    init_pair(8, COLOR_FIREBRICK, COLOR_BLACK);
+    
+    hx(Forestgreen_color, &r, &g, &b);
+    init_color(COLOR_FORESTGREEN, r, g, b);
+    init_pair(9, COLOR_FORESTGREEN, COLOR_BLACK);
+    
+    hx(Dimgray_color, &r, &g, &b);
+    init_color(COLOR_DIMGRAY, r, g, b);
+    init_pair(10, COLOR_DIMGRAY, COLOR_BLACK);
+    
+    hx(Gold_color, &r, &g, &b);
+    init_color(COLOR_GOLD, r, g, b);
+    init_pair(11, COLOR_GOLD, COLOR_BLACK);
+    
+    hx(Darkorage_color, &r, &g, &b);
+    init_color(COLOR_DARKORANGE, r, g, b);
+    init_pair(12, COLOR_DARKORANGE, COLOR_BLACK);
+
+}
 
 
 

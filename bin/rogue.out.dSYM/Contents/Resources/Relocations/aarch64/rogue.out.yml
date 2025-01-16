@@ -1,5 +1,33 @@
 ---
 triple:          'arm64-apple-darwin'
 binary-path:     rogue.out
-relocations:     []
+relocations:
+  - { offset: 0x19, size: 0x8, addend: 0x0, symName: _hx, symObjAddr: 0x0, symBinAddr: 0x100001200, symSize: 0xFC }
+  - { offset: 0xC4D, size: 0x8, addend: 0x0, symName: _player, symObjAddr: 0x11DB0, symBinAddr: 0x100010000, symSize: 0x0 }
+  - { offset: 0xC6F, size: 0x8, addend: 0x0, symName: _init_game, symObjAddr: 0x95A8, symBinAddr: 0x10000A7A8, symSize: 0x18 }
+  - { offset: 0xC8D, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x9434, symBinAddr: 0x10000A634, symSize: 0x174 }
+  - { offset: 0xCA8, size: 0x8, addend: 0x0, symName: _player_menu, symObjAddr: 0x8CA4, symBinAddr: 0x100009EA4, symSize: 0x790 }
+  - { offset: 0xDA9, size: 0x8, addend: 0x0, symName: _check_login, symObjAddr: 0x8A84, symBinAddr: 0x100009C84, symSize: 0x220 }
+  - { offset: 0xE3A, size: 0x8, addend: 0x0, symName: _guest_login, symObjAddr: 0x87D4, symBinAddr: 0x1000099D4, symSize: 0x2B0 }
+  - { offset: 0xE77, size: 0x8, addend: 0x0, symName: _official_login, symObjAddr: 0x826C, symBinAddr: 0x10000946C, symSize: 0x568 }
+  - { offset: 0xEF0, size: 0x8, addend: 0x0, symName: _check_player, symObjAddr: 0x7E14, symBinAddr: 0x100009014, symSize: 0x458 }
+  - { offset: 0xFB0, size: 0x8, addend: 0x0, symName: _login_player, symObjAddr: 0x795C, symBinAddr: 0x100008B5C, symSize: 0x4B8 }
+  - { offset: 0x105B, size: 0x8, addend: 0x0, symName: _create_player, symObjAddr: 0x70F8, symBinAddr: 0x1000082F8, symSize: 0x864 }
+  - { offset: 0x111A, size: 0x8, addend: 0x0, symName: _main_menu, symObjAddr: 0x6B78, symBinAddr: 0x100007D78, symSize: 0x580 }
+  - { offset: 0x11D4, size: 0x8, addend: 0x0, symName: _change_music, symObjAddr: 0x6464, symBinAddr: 0x100007664, symSize: 0x714 }
+  - { offset: 0x132E, size: 0x8, addend: 0x0, symName: _change_color, symObjAddr: 0x5EDC, symBinAddr: 0x1000070DC, symSize: 0x588 }
+  - { offset: 0x1420, size: 0x8, addend: 0x0, symName: _change_difficulty, symObjAddr: 0x593C, symBinAddr: 0x100006B3C, symSize: 0x5A0 }
+  - { offset: 0x1512, size: 0x8, addend: 0x0, symName: _delete_enter, symObjAddr: 0x58E8, symBinAddr: 0x100006AE8, symSize: 0x54 }
+  - { offset: 0x154D, size: 0x8, addend: 0x0, symName: _settings, symObjAddr: 0x5338, symBinAddr: 0x100006538, symSize: 0x5B0 }
+  - { offset: 0x1628, size: 0x8, addend: 0x0, symName: _score_table, symObjAddr: 0x49B0, symBinAddr: 0x100005BB0, symSize: 0x988 }
+  - { offset: 0x17AA, size: 0x8, addend: 0x0, symName: _old_game, symObjAddr: 0x4988, symBinAddr: 0x100005B88, symSize: 0x28 }
+  - { offset: 0x17C4, size: 0x8, addend: 0x0, symName: _new_game, symObjAddr: 0x4850, symBinAddr: 0x100005A50, symSize: 0x138 }
+  - { offset: 0x17EF, size: 0x8, addend: 0x0, symName: _play_game, symObjAddr: 0x4678, symBinAddr: 0x100005878, symSize: 0x1D8 }
+  - { offset: 0x186F, size: 0x8, addend: 0x0, symName: _in_room_road, symObjAddr: 0x27FC, symBinAddr: 0x1000039FC, symSize: 0x1E7C }
+  - { offset: 0x1A75, size: 0x8, addend: 0x0, symName: _create_new_room, symObjAddr: 0x1108, symBinAddr: 0x100002308, symSize: 0x16F4 }
+  - { offset: 0x1E55, size: 0x8, addend: 0x0, symName: _create_new_floor, symObjAddr: 0xF84, symBinAddr: 0x100002184, symSize: 0x184 }
+  - { offset: 0x1EC2, size: 0x8, addend: 0x0, symName: _create_new_game, symObjAddr: 0x7EC, symBinAddr: 0x1000019EC, symSize: 0x798 }
+  - { offset: 0x1FD9, size: 0x8, addend: 0x0, symName: _clear_space2, symObjAddr: 0x4E4, symBinAddr: 0x1000016E4, symSize: 0x308 }
+  - { offset: 0x204E, size: 0x8, addend: 0x0, symName: _clear_space, symObjAddr: 0xFC, symBinAddr: 0x1000012FC, symSize: 0x3E8 }
+  - { offset: 0x2147, size: 0x8, addend: 0x0, symName: _hx, symObjAddr: 0x0, symBinAddr: 0x100001200, symSize: 0xFC }
 ...
