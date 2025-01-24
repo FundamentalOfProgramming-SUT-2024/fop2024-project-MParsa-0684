@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "ui.h"
-#include "menus.h"
 #include <time.h>
 #include <regex.h>
 #include <dirent.h>
@@ -16,7 +14,22 @@
 #include <wchar.h>
 #include <unistd.h>
 
+#include "ui.h"
+#include "menus.h"
+#include "feature.h"
 
+
+// Initial defines
+int directions[8][2] = {
+    {0, -1}, //0
+    {1, -1}, //1
+    {1, 0},  //2
+    {1, 1},  //3
+    {0, 1},  //4
+    {-1, 1}, //5
+    {-1, 0}, //6
+    {-1, -1} //7
+};
 
 
 // Initial structs
@@ -234,7 +247,9 @@ void create_new_floor(Floor *floor, int floor_num, Game *game);
 void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game *game);
 void in_room_road(Floor *floor);
 void paint_floor(Game *game, Floor *floor, WINDOW *game_window);
-// void *play_sound(void *arg);
+void *play_sound(void *arg);
+void whole_game(Game *game, Floor *floor);
+bool is_in_map(int y, int x);
 
 
 // For creating new game
@@ -292,8 +307,8 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
 
     // Player Room and floor and location in first game
     (*game)->player_floor = 0;
-    srand(time(NULL));
-    while(true) {
+    bool flag = false;
+    while(!flag) {
         (*game)->player_location.y = (rand() % 40);
         (*game)->player_location.x = (rand() % 146);
         int i = (*game)->player_location.y;
@@ -305,15 +320,18 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
         && (j >= (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.x 
         && j < ((*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].start.x 
         + (*game)->floors[0].Rooms[(*game)->floors[0].staircase_num].size.x))))
-            break; 
+            flag = true; 
     
-    }
-    
-    for(int i = 0; i < 6; i++) {
-        if((*game)->player_location.x >= (*game)->floors[0].Rooms[i].start.x && (*game)->player_location.x < (*game)->floors[0].Rooms[i].start.x + (*game)->floors[0].Rooms[i].size.x && (*game)->player_location.y >= (*game)->floors[0].Rooms[i].start.y && (*game)->player_location.y < (*game)->floors[0].Rooms[i].start.y + (*game)->floors[0].Rooms[i].size.y) {
-            (*game)->player_room = i;
+        for(int i = 0; i < 6; i++) {
+            if((*game)->player_location.x >= (*game)->floors[0].Rooms[i].start.x && (*game)->player_location.x < (*game)->floors[0].Rooms[i].start.x + (*game)->floors[0].Rooms[i].size.x && (*game)->player_location.y >= (*game)->floors[0].Rooms[i].start.y && (*game)->player_location.y < (*game)->floors[0].Rooms[i].start.y + (*game)->floors[0].Rooms[i].size.y) {
+                if((*game)->floors[0].Rooms[i].type == General)
+                    (*game)->player_room = i;
+                else
+                    flag = false;
+            }
         }
     }
+    
 
     // make player's room visited for starting of the game
     for(int i = (*game)->floors[0].Rooms[(*game)->player_room].start.y; i < (*game)->floors[0].Rooms[(*game)->player_room].start.y + (*game)->floors[0].Rooms[(*game)->player_room].size.y; i++) {
@@ -326,7 +344,6 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
 
 // Creating new floor
 void create_new_floor(Floor *floor, int floor_num, Game *game) {
-    srand(time(NULL));
     floor->Rooms = (Room *) calloc(6, sizeof(Room));
     floor->room_num = 6;
     if(floor_num == 3)
@@ -352,7 +369,6 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 
     // Room configuration
     bool flag = true;
-    srand(time(NULL));
     while(flag) {
         room->start.y = (rand() % 39) + 1;
         room->start.x = (rand() % 145) + 1;
@@ -379,21 +395,17 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     for(int j = room->start.x; j < room->start.x + room->size.x; j++)
         floor->map[room->start.y][j] = '_', floor->map[room->start.y + room->size.y - 1][j] = '_';
     
-    srand(time(NULL));
     if(floor_num == 3 && room_num == floor->has_gold)
         room->type = Treasure;
     else {
-        Room_Type type[9] = {General, Enchant, General, General, Nightmare, General, General, Nightmare, General};
-        int rtype = rand() % 9;
+        Room_Type type[9] = {General, Nightmare, General, General, Enchant, General, General, Nightmare, General};
+        long long int rtype = rand() % 9;
         room->type = type[rtype];
     }
 
-    srand(time(NULL));
     switch(room->type) {
         case Treasure:
-            srand(time(NULL));
             room->trap_num = rand() % 3;
-            srand(time(NULL));
             room->gold_num = rand() % 4;
             break;
         
@@ -403,15 +415,10 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 
         case Nightmare:
         case General:
-            srand(time(NULL));
             room->food_num = rand() % (game->game_difficulty);
-            srand(time(NULL));
             room->gold_num = rand() % (game->game_difficulty);
-            srand(time(NULL));
             room->gun_num = rand() % 2;
-            srand(time(NULL));
             room->spell_num = rand() % 2;
-            srand(time(NULL));
             room->trap_num = rand() % 2;
             break;
 
@@ -423,7 +430,6 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     room->foods = (Food **) calloc((room->food_num), sizeof(Food *));
     Food_Type ftype[7] = {Ordinary, Excellent, Ordinary, Magical, Toxic, Ordinary, Ordinary};
     for(int i = 0; i < room->food_num; i++) {
-        srand(time(NULL));
         int ft = rand() % 7;
         room->foods[i] = (Food *) calloc(1, sizeof(Food));
         room->foods[i]->type = ftype[ft];
@@ -456,7 +462,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     room->golds = (Gold **) calloc((room->gold_num), sizeof(Gold *));
     Gold_Type Gtype[7] = {Regular, Regular, Regular, Regular, Black, Black, Regular};
     for(int i = 0; i < room->gold_num; i++) {
-        srand(time(NULL));
+        
         int Gt = rand() % 7;
         room->golds[i] = (Gold *) calloc(1, sizeof(Gold));
         room->golds[i]->type = Gtype[Gt];
@@ -483,7 +489,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     room->guns = (Gun **) calloc((room->gun_num), sizeof(Gun *));
     Gun_Type gtype[4] = {Dagger, Magic_Wand, Normal_Arrow, Sword};
     for(int i = 0; i < room->gun_num; i++) {
-        srand(time(NULL));
+        
         int gt = rand() % 4;
         room->guns[i] = (Gun *) calloc(1, sizeof(Gun));
         room->guns[i]->type = gtype[gt];
@@ -519,7 +525,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     room->spells = (Spell **) calloc((room->spell_num), sizeof(Spell *));
     Spell_Type stype[3] = {Health, Speed, Damage};
     for(int i = 0; i < room->spell_num; i++) {
-        srand(time(NULL));
+        
         int st = rand() % 3;
         room->spells[i] = (Spell *) calloc(1, sizeof(Spell));
         room->spells[i]->type = stype[st];
@@ -548,7 +554,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     // Trap configuration
     room->traps = (Trap **) calloc((room->trap_num), sizeof(Trap *));
     for(int i = 0; i < room->trap_num; i++) {
-        srand(time(NULL));
+        
         room->traps[i] = (Trap *) calloc(1, sizeof(Trap));
         bool flag = true;
         while(flag) {
@@ -563,7 +569,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
 
     // Normal Door configuration
-    // srand(time(NULL));
+    // 
     // room->normal_door = (Normal_Door *) calloc(1, sizeof(Normal_Door));
     // flag = true;
     // while(flag) {
@@ -576,7 +582,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     // }
 
     // Staircase
-    srand(time(NULL));
+    
     room->staircase = (Staircase *) calloc(1, sizeof(Staircase));
     if(room_num == floor->staircase_num) {
         bool flag = true;
@@ -596,7 +602,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
     }
     
     // Master Key
-    srand(time(NULL));
+    
     room->master_key = (Master_Key *) calloc(1, sizeof(Master_Key));
     if(room_num == floor->master_key_num) {
         bool flag = true;
@@ -621,6 +627,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 // Creating In_Room roads
 void in_room_road(Floor *floor) {
 
+    srand(time(NULL));
     for(int i = 1; i < 6; i++) {
         Location current ={floor->Rooms[i - 1].start.x + (floor->Rooms[i - 1].size.x / 2), floor->Rooms[i - 1].start.y + (floor->Rooms[i - 1].size.y / 2)};
         Location end = {floor->Rooms[i].start.x + (floor->Rooms[i].size.x / 2), floor->Rooms[i].start.y + (floor->Rooms[i].size.y / 2)};
@@ -650,28 +657,11 @@ void in_room_road(Floor *floor) {
                             flag = true;
                         }
                     }
-    // WINDOW *game_window = newwin(40, 146, 1, 1);
-    // wclear(game_window);
-    // for(int i = 0; i < 40; i++) {
-    //     // move(i + 1, 1);
-    //     printf(" ");
-    //     for(int j = 0; j < 146; j++) {
-    //         wattron(game_window, COLOR_PAIR(1));
-    //         // wmove(game_window, i + 1, j + 1);
-    //         mvwaddch(game_window, i, j, floor->map[i][j]);
-    //         wattroff(game_window, COLOR_PAIR(1));
-    //         wrefresh(game_window);
-    //     }
-    //     printf(" ");
-    // }
-
-    // delwin(game_window);
-    // sleep(1);
                 }
                 current.x++;
                 ctr++;
                 if(ctr % 8 == 0 && floor->map[current.y][current.x - 1] != '+') {
-                    srand(time(NULL));
+                    
                     int r = rand() % 2;
                     if(r == 0 && current.y < 39 && floor->map[current.y + 1][current.x] != '_' && floor->map[current.y + 1][current.x] != '|')
                         current.y++;
@@ -709,7 +699,6 @@ void in_room_road(Floor *floor) {
                 current.x--;
                 ctr++;
                 if(ctr % 8 == 0 && floor->map[current.y][current.x + 1] != '+') {
-                    srand(time(NULL));
                     int r = rand() % 2;
                     if(r == 0 && current.y < 39 && floor->map[current.y + 1][current.x] != '_' && floor->map[current.y + 1][current.x] != '|')
                         current.y++;
@@ -717,23 +706,6 @@ void in_room_road(Floor *floor) {
                         current.y--;
                     current.x++;
                 }
-    //                 WINDOW *game_window = newwin(40, 146, 1, 1);
-    // wclear(game_window);
-    // for(int i = 0; i < 40; i++) {
-    //     // move(i + 1, 1);
-    //     printf(" ");
-    //     for(int j = 0; j < 146; j++) {
-    //         wattron(game_window, COLOR_PAIR(1));
-    //         // wmove(game_window, i + 1, j + 1);
-    //         mvwaddch(game_window, i, j, floor->map[i][j]);
-    //         wattroff(game_window, COLOR_PAIR(1));
-    //         wrefresh(game_window);
-    //     }
-    //     printf(" ");
-    // }
-
-    // delwin(game_window);
-    // sleep(1);
             }
         }
 
@@ -757,23 +729,6 @@ void in_room_road(Floor *floor) {
                     }
                 }
                 current.y++;
-    //                 WINDOW *game_window = newwin(40, 146, 1, 1);
-    // wclear(game_window);
-    // for(int i = 0; i < 40; i++) {
-    //     // move(i + 1, 1);
-    //     printf(" ");
-    //     for(int j = 0; j < 146; j++) {
-    //         wattron(game_window, COLOR_PAIR(1));
-    //         // wmove(game_window, i + 1, j + 1);
-    //         mvwaddch(game_window, i, j, floor->map[i][j]);
-    //         wattroff(game_window, COLOR_PAIR(1));
-    //         wrefresh(game_window);
-    //     }
-    //     printf(" ");
-    // }
-
-    // delwin(game_window);
-    // sleep(1);
             }
         }
         else if(dy < 0) {
@@ -794,23 +749,6 @@ void in_room_road(Floor *floor) {
                     }
                 }
                 current.y--;
-    //                 WINDOW *game_window = newwin(40, 146, 1, 1);
-    // wclear(game_window);
-    // for(int i = 0; i < 40; i++) {
-    //     // move(i + 1, 1);
-    //     printf(" ");
-    //     for(int j = 0; j < 146; j++) {
-    //         wattron(game_window, COLOR_PAIR(1));
-    //         // wmove(game_window, i + 1, j + 1);
-    //         mvwaddch(game_window, i, j, floor->map[i][j]);
-    //         wattroff(game_window, COLOR_PAIR(1));
-    //         wrefresh(game_window);
-    //     }
-    //     printf(" ");
-    // }
-
-    // delwin(game_window);
-    // sleep(1);
             }
         }
     }
@@ -831,14 +769,316 @@ void play_game(Game *game) {
     // pthread_t sound_thread;
     // pthread_create(&sound_thread, NULL, play_sound, (void *) game->music->music_path);
 
-    while(true) {
+    // facets
+    bool flag = true;
+    bool is_take_element = true;  
+    bool is_g = false;  
+    bool is_f = false;
+    bool is_moved = false;
+    int dir = -1;
+    while(flag) {
         paint_floor(game, &game->floors[game->player_floor], game_window);
-        sleep(5);
-        break;
+        
+        is_moved = false;
+        int c = getch();
+        switch(c) {
+            // moves
+            case 'j':
+                if(is_f == true) {
+                    while(game->player_location.y > 0 && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '_' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '|' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != ' ') {
+                        game->player_location.y--;    
+                    }
+                    is_f = false;
+                }
+                else if(game->player_location.y > 0 && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '_' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '|' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != ' ') {
+                    game->player_location.y--;
+                }
+                else
+                    beep();
 
+                if(is_g == true) {
+                    is_g = false;
+                    is_take_element = false;
+                }
+                is_moved = true;
+                dir = 0;
+                break;
+
+            case 'k':
+                if(is_f == true) {
+                    while(game->player_location.y < 39 && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '_' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '|' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != ' ') {
+                        game->player_location.y++;
+                    }
+                    is_f = false;    
+                }
+                else if(game->player_location.y < 39 && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '_' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '|' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != ' ') {
+                    game->player_location.y++;
+                }
+                else
+                    beep();
+
+                if(is_g == true) {
+                    is_g = false;
+                    is_take_element = false;
+                }
+                is_moved = true;
+                dir = 4;
+                break;
+
+            case  'l':
+                if(is_f == true) {
+                    while(game->player_location.x < 145 && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '|' && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '_' && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != ' ') {
+                        game->player_location.x++;
+                    }
+                    is_f = false;
+                }
+                else if(game->player_location.x < 145 && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '|' && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '_' && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != ' ') {
+                    game->player_location.x++;
+                }
+                else
+                    beep();
+
+                if(is_g == true) {
+                    is_g = false;
+                    is_take_element = false;
+                }
+                is_moved = true;
+                dir = 2;
+                break;
+            
+            case 'h':
+                if(is_f == true) {
+                    while(game->player_location.x > 0 && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '|' && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '_' && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != ' ') {
+                        game->player_location.x--;
+                    }
+                    is_f = false;
+                }
+                else if(game->player_location.x > 0 && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '|' && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '_' && game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != ' ') {
+                    game->player_location.x--;
+                }
+                else
+                    beep();
+
+                if(is_g == true) {
+                    is_g = false;
+                    is_take_element = false;
+                }
+                is_moved = true;
+                dir = 6;
+                break;
+
+            case 'y':
+                if(is_f == true) {
+                    while(game->player_location.x > 0 && game->player_location.y > 0 && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '_' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '|' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != ' ') {
+                        game->player_location.x--, game->player_location.y--;
+                    }
+                    is_f = false;
+                }
+                else if(game->player_location.x > 0 && game->player_location.y > 0 && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '_' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '|' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != ' ') {
+                    game->player_location.x--, game->player_location.y--;
+                }
+                else
+                    beep();
+
+                if(is_g == true) {
+                    is_g = false;
+                    is_take_element = false;
+                }
+                is_moved = true;
+                dir = 7;
+                break;
+
+            case 'u':
+                if(is_f == true) {
+                    while(game->player_location.x < 145 && game->player_location.y > 0 && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '_' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '|' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != ' ') {
+                        game->player_location.x++, game->player_location.y--;
+                    }
+                    is_f = false;
+                }
+                else if(game->player_location.x < 145 && game->player_location.y > 0 && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '_' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '|' && game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != ' ') {
+                    game->player_location.x++, game->player_location.y--;
+                }
+                else
+                    beep();
+
+                if(is_g == true) {
+                    is_g = false;
+                    is_take_element = false;
+                }
+                is_moved = true;
+                dir = 1;
+                break;
+            
+            case 'b':
+                if(is_f == true) {
+                    while(game->player_location.x > 0 && game->player_location.y < 39 && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '_' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '|' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != ' ') {
+                        game->player_location.x--, game->player_location.y++;
+                    }
+                    is_f = false;
+                }
+                else if(game->player_location.x > 0 && game->player_location.y < 39 && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '_' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '|' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != ' ') {
+                    game->player_location.x--, game->player_location.y++;
+                }
+                else
+                    beep();
+
+                if(is_g == true) {
+                    is_g = false;
+                    is_take_element = false;
+                }
+                is_moved = true;
+                dir = 5;
+                break;
+            
+            case 'n':
+                if(is_f == true) {
+                    while(game->player_location.x < 145 && game->player_location.y < 39 && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '_' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '|' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != ' ') {
+                        game->player_location.x++, game->player_location.y++;
+                    }
+                    is_f = false;
+                }
+                else if(game->player_location.x < 145 && game->player_location.y < 39 && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '_' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '|' && game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != ' ') {
+                    game->player_location.x++, game->player_location.y++;
+                }
+                else
+                    beep();
+
+                if(is_g == true) {
+                    is_g = false;
+                    is_take_element = false;
+                }
+                is_moved = true;
+                dir = 3;
+                break;
+
+            // see whole map
+            case 'm':
+                whole_game(game, &game->floors[game->player_floor]);
+                break;
+
+            // move in one directin
+            case 'f':
+                is_f = true;
+                break;
+            
+            // not taking enchant or gun
+            case 'g':
+                is_g = true;
+                break;
+
+            // search for neighbors for trap or secret door
+            case 's':
+                for(int ii = 0; ii < 8; ii++) {
+                    
+                }
+                break;
+
+            // go down stairs
+            case '>':
+                if(game->player_floor < 3) {
+                    game->player_floor++;
+                    game->player_room = game->floors[game->player_floor].staircase_num;
+                    game->player_location = game->floors[game->player_floor].Rooms[game->floors[game->player_floor].staircase_num].staircase->location;
+                    Room *temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
+                    for(int ii = temp_room->start.y; ii < temp_room->start.y + temp_room->size.y; ii++) {
+                        for(int jj = temp_room->start.x; jj < temp_room->start.x + temp_room->size.x; jj++) {
+                            game->floors[game->player_floor].visit[ii][jj] = true;
+                        }
+                    }
+                }
+                else
+                    beep();
+                break;
+
+            // go up stairs
+            case '<':
+                if(game->player_floor > 0) {
+                    game->player_floor--;
+                    game->player_location = game->floors[game->player_floor].Rooms[game->floors[game->player_floor].staircase_num].staircase->location;
+                    game->player_room = game->floors[game->player_floor].staircase_num;
+                }
+                else
+                    beep();
+                break;
+
+            // menu for foods to eat
+            case 'e':
+
+                break;
+
+            // munu for guns to take
+            case 'i':
+
+                break;
+
+            // menu for spells to use
+            case 'p':
+
+                break;
+
+            // quit and save
+            case 'q':
+                flag = false;
+                break;
+        }
+
+        //! actions after moving 
+
+
+        if(is_moved == true && is_take_element == true) {
+            game->floors[game->player_floor].visit[game->player_location.y][game->player_location.x] = true;
+            int ii = 1;
+            switch(game->floors[game->player_floor].map[game->player_location.y][game->player_location.x]) {
+                case '#':
+                    // expand road for player
+                    while(ii < 6) {
+                        int y = game->player_location.y + (ii * directions[dir][1]), x = game->player_location.x + (ii * directions[dir][0]);
+                        if(is_in_map(y, x) && game->floors[game->player_floor].map[y][x] == '#')
+                            game->floors[game->player_floor].visit[y][x] = true;
+                        else 
+                            break;
+
+                        ii++;
+                    }
+
+                    // set player_room in road to -1
+                    if(game->floors[game->player_floor].map[game->player_location.y + directions[(dir + 4) % 8][1]][game->player_location.x + directions[(dir + 4) % 8][0]] == '+')
+                        game->player_room = -1;
+                    break;
+
+                case '+':
+                    // locate new room for player_room
+                    if(game->player_room == -1) {
+                        for(int iii = 0; iii < 6 && game->player_room == -1; iii++) {
+                            for(int jj = 0; jj < game->floors[game->player_floor].Rooms[iii].normal_doors_num && game->player_room == -1; jj++) {
+                                if(game->player_location.y == game->floors[game->player_floor].Rooms[iii].normal_doors[jj].location.y && game->player_location.x == game->floors[game->player_floor].Rooms[iii].normal_doors[jj].location.x) {
+                                    game->player_room = iii;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    // show new room
+                    Room *temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
+                    for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
+                        for(int jj = temp_room->start.x; jj < temp_room->start.x + temp_room->size.x; jj++) {
+                            game->floors[game->player_floor].visit[iii][jj] = true;
+                        }
+                    }
+                    break;
+
+                default:
+
+                    break;
+            }
+        } 
+        else if(is_moved == true){
+            is_take_element = true;
+        }
+        
     }
 
-    // // Music end
+    // Music end
     // pthread_cancel(sound_thread); 
     // pthread_join(sound_thread, NULL); 
 
@@ -846,6 +1086,8 @@ void play_game(Game *game) {
 }
 
 void paint_floor(Game *game, Floor *floor, WINDOW *game_window) {
+    noecho();
+    curs_set(FALSE);
     clear_space2();
     wclear(game_window);
 
@@ -867,16 +1109,16 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window) {
                                 color_num = 1;
                                 break;
                             case Treasure:
-                                wattron(game_window, COLOR_PAIR(4));
-                                color_num = 4;
+                                wattron(game_window, COLOR_PAIR(11));
+                                color_num = 11;
                                 break;
                             case Enchant:
-                                wattron(game_window, COLOR_PAIR(5));
-                                color_num = 5;
+                                wattron(game_window, COLOR_PAIR(9));
+                                color_num = 9;
                                 break;
                             case Nightmare:
-                                wattron(game_window, COLOR_PAIR(6));
-                                color_num = 6;
+                                wattron(game_window, COLOR_PAIR(12));
+                                color_num = 12;
                                 break;
                         }
                         flag = true;
@@ -891,25 +1133,135 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window) {
         }
     }
 
-    wattron(game_window, COLOR_PAIR(game->player_color) | A_BLINK | A_BOLD);
+    wattron(game_window, COLOR_PAIR(game->player_color) | A_BOLD);
     mvwaddch(game_window, game->player_location.y, game->player_location.x, 'P');
     wrefresh(game_window);
-    wattroff(game_window, COLOR_PAIR(game->player_color) | A_BLINK | A_BOLD);
+    wattroff(game_window, COLOR_PAIR(game->player_color) | A_BOLD);
 
+    attron(COLOR_PAIR(3) | A_BOLD);
+    for(int i = 0; i < 148; i++) {
+        move(0, i);
+        addch(' ');
+        move(41, i);
+        addch(' ');
+    }    
+    attroff(COLOR_PAIR(3) | A_BOLD);
+    if(game->floors[game->player_floor].map[game->player_location.y][game->player_location.x] == '<') {
+        attron(COLOR_PAIR(3) | A_BOLD);
+        move(0, 1);
+        addstr("PRESS >/< to go up/down stair...");
+        attroff(COLOR_PAIR(3) | A_BOLD);
+    }
+    
+    refresh();
 }
 
-// void *play_sound(void *arg) {
-    // const char *sound_file = (const char *)arg;
-    // char command[256];
-// 
-    // snprintf(command, sizeof(command), "afplay %s", sound_file);
-// 
-    // while (1) {
-        // system(command);
-        // sleep(1);
-    // }
-// 
-    // return NULL;
-// }
+void *play_sound(void *arg) {
+    const char *sound_file = (const char *)arg;
+
+    // Fork a child process
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Child process runs afplay
+        execlp("afplay", "afplay", sound_file, (char *)NULL);
+        perror("Error executing afplay"); // If execlp fails
+        exit(1);
+    }
+
+    // Parent process continues (does nothing here for sound)
+    return NULL;
+}
+
+void whole_game(Game *game, Floor *floor) {
+    WINDOW *whole_map = newwin(40, 146, 1, 1);
+    for(int i = 0; i < 40; i++) {
+        for(int j = 0; j < 146; j++) {
+            int color_num;
+            if(true) {
+                bool flag = false;
+                if(floor->map[i][j] == '#') {
+                    wattron(whole_map, COLOR_PAIR(1));
+                    color_num = 1;
+                    flag = true;
+                }
+
+                for(int ii = 0; ii < 6 && !flag; ii++) {
+                    if(i >= floor->Rooms[ii].start.y && j >= floor->Rooms[ii].start.x && i < (floor->Rooms[ii].start.y + floor->Rooms[ii].size.y) && j < (floor->Rooms[ii].start.x + floor->Rooms[ii].size.x)) {
+                        switch(floor->Rooms[ii].type) {
+                            case General:
+                                wattron(whole_map, COLOR_PAIR(1));
+                                color_num = 1;
+                                break;
+                            case Treasure:
+                                wattron(whole_map, COLOR_PAIR(11));
+                                color_num = 11;
+                                break;
+                            case Enchant:
+                                wattron(whole_map, COLOR_PAIR(9));
+                                color_num = 9;
+                                break;
+                            case Nightmare:
+                                wattron(whole_map, COLOR_PAIR(12));
+                                color_num = 12;
+                                break;
+                        }
+                        flag = true;
+                    } 
+                }
+
+                mvwaddch(whole_map, i, j, floor->map[i][j]);
+                wrefresh(whole_map);
+                wattroff(whole_map, COLOR_PAIR(color_num));
+            }
+        }
+    }
+
+    wattron(whole_map, COLOR_PAIR(game->player_color) | A_BOLD);
+    mvwaddch(whole_map, game->player_location.y, game->player_location.x, 'P');
+    wrefresh(whole_map);
+    wattroff(whole_map, COLOR_PAIR(game->player_color) | A_BOLD);
+
+    move(0, 1);
+    attron(COLOR_PAIR(3) | A_BOLD);
+    addstr("PRESS 'm' key to continue game...");
+
+    while(true) {
+        int c = getch();
+        if(c == 'm')
+            break;
+    }
+
+    for(int i = 0; i < 146; i++) {
+        move(0, i);
+        addch(' ');
+    }    
+    attroff(COLOR_PAIR(3) | A_BOLD);
+
+    delwin(whole_map);
+}
+
+bool is_in_map(int y, int x) {
+    if(x >= 0 && y >= 0 && x < 146 && y < 40)
+        return true;
+    else
+        return false;
+}
+
 
 #endif
+
+
+
+// void *play_sound(void *arg) {
+//     const char *sound_file = (const char *)arg;
+//     char command[256];
+
+//     snprintf(command, sizeof(command), "setsid afplay '%s' &", sound_file);
+
+//     while (1) {
+//         system(command);
+//         sleep(1);
+//     }
+
+//     return NULL;
+// }

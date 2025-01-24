@@ -307,11 +307,13 @@ int check_player() {
     strcat(file_path, player->username);
     strcat(file_path, ".txt");
     if(fopen(file_path, "r") != NULL) {
+        beep();
         addstr("This Username currently exists! Press ENTER to try again...");
         attroff(COLOR_PAIR(3) | A_BOLD);
         return 0;
     }
     if(strlen(player->password) < 7) {
+        beep();
         addstr("Length of Password should be at least 7! Press ENTER to try again...");
         attroff(COLOR_PAIR(3) | A_BOLD);
         return 0;
@@ -331,6 +333,7 @@ int check_player() {
     }
 
     if(!(flagnum && flagA && flaga)) {
+        beep();
         addstr("Password should contains Number, Uppercase and Lowercase letters! Press ENTER to try again...");
         attroff(COLOR_PAIR(3) | A_BOLD);
         return 0;
@@ -340,6 +343,7 @@ int check_player() {
     const char *email_pattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     int log = regcomp(&reg, email_pattern, REG_EXTENDED);
     if(log) {
+        beep();
         addstr("Could not compile E-mail, Press ENTER to try again...");
         attroff(COLOR_PAIR(3) | A_BOLD);
         return 0;
@@ -347,6 +351,7 @@ int check_player() {
     log = regexec(&reg, player->email, 0, NULL, 0);
     regfree(&reg);
     if(log) {
+        beep();
         addstr("E-mail pattern doesn't match, Press ENTER to try again...");
         attroff(COLOR_PAIR(3) | A_BOLD);
         return 0;
@@ -461,8 +466,8 @@ void guest_login() {
     fscanf(player_file, "%d", &(player->game_difficulty));
     fscanf(player_file, "%d", &(player->color));
     player->music = (Music *) malloc(sizeof(Music));
-    fgets(player->music->music_path, 100, player_file);
-    delete_enter(player->music->music_path);
+    fscanf(player_file, "%s", player->music->music_path);
+    // delete_enter(player->music->music_path);
     fclose(player_file);
     // adding other arguments to player
 
@@ -481,6 +486,7 @@ int check_login(char *usern, char *passw) {
     strcat(file_path, usern);
     strcat(file_path, ".txt");
     if(fopen(file_path, "r") == NULL) {
+        beep();
         addstr("Player with this Username doesn't exist! Press ENTER to try again...");
         attroff(COLOR_PAIR(3) | A_BOLD);
         return 0;
@@ -496,6 +502,7 @@ int check_login(char *usern, char *passw) {
     if(playerpass[len - 1] == '\n')
         playerpass[len - 1] = '\0';
     if(strcmp(passw, playerpass) != 0) {
+        beep();
         addstr("Password is not correct! Press ENTER to try again...");
         attroff(COLOR_PAIR(3) | A_BOLD);
         fclose(login);
@@ -605,8 +612,6 @@ void player_menu() {
         // clear_space();
         
     }
-
-
 }
 
 

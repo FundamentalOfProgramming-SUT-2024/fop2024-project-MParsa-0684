@@ -116,10 +116,6 @@ void clear_space2() {
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
     init_pair(2, COLOR_BLACK, COLOR_BLUE);
 
-    init_pair(4, COLOR_GOLD, COLOR_BLACK);
-    init_pair(5, COLOR_FORESTGREEN, COLOR_BLACK);
-    init_pair(6, COLOR_DARKORANGE, COLOR_BLACK);
-
     hx(Firebrick_color, &r, &g, &b);
     init_color(COLOR_FIREBRICK, r, g, b);
     init_pair(8, COLOR_FIREBRICK, COLOR_BLACK);
