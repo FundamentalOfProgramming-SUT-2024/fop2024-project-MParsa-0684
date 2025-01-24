@@ -649,7 +649,7 @@ void in_room_road(Floor *floor) {
                     floor->map[current.y][current.x] = '+';
                     bool flag = false;
                     for(int j = 0; j < 6 && !flag; j++) {
-                        if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
+                        if(current.x >= floor->Rooms[j].start.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].start.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
                             floor->Rooms[j].normal_doors_num++;
                             floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
                             floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.x = current.x;
@@ -686,7 +686,7 @@ void in_room_road(Floor *floor) {
                     floor->map[current.y][current.x] = '+';
                     bool flag = false;
                     for(int j = 0; j < 6 && !flag; j++) {
-                        if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
+                        if(current.x >= floor->Rooms[j].start.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].start.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
                             floor->Rooms[j].normal_doors_num++;
                             floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
                             floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.x = current.x;
@@ -709,7 +709,6 @@ void in_room_road(Floor *floor) {
             }
         }
 
-
         int dy = end.y - current.y;
         if(dy > 0) {
             while(current.y < end.y) {
@@ -719,7 +718,7 @@ void in_room_road(Floor *floor) {
                     floor->map[current.y][current.x] = '+';
                     bool flag = false;
                     for(int j = 0; j < 6 && !flag; j++) {
-                        if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
+                        if(current.x >= floor->Rooms[j].start.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].start.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
                             floor->Rooms[j].normal_doors_num++;
                             floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
                             floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.x = current.x;
@@ -739,7 +738,7 @@ void in_room_road(Floor *floor) {
                     floor->map[current.y][current.x] = '+';
                     bool flag = false;
                     for(int j = 0; j < 6 && !flag; j++) {
-                        if(current.x >= floor->Rooms[j].size.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].size.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
+                        if(current.x >= floor->Rooms[j].start.x && current.x < floor->Rooms[j].start.x + floor->Rooms[j].size.x && current.y >= floor->Rooms[j].start.y && current.y < floor->Rooms[j].start.y + floor->Rooms[j].size.y) {
                             floor->Rooms[j].normal_doors_num++;
                             floor->Rooms[j].normal_doors = (Normal_Door *) realloc(floor->Rooms[j].normal_doors, floor->Rooms[j].normal_doors_num * sizeof(Normal_Door));
                             floor->Rooms[j].normal_doors[floor->Rooms[j].normal_doors_num - 1].location.x = current.x;
@@ -1003,7 +1002,7 @@ void play_game(Game *game) {
 
             // menu for foods to eat
             case 'e':
-
+                
                 break;
 
             // munu for guns to take
@@ -1042,7 +1041,7 @@ void play_game(Game *game) {
                     }
 
                     // set player_room in road to -1
-                    if(game->floors[game->player_floor].map[game->player_location.y + directions[(dir + 4) % 8][1]][game->player_location.x + directions[(dir + 4) % 8][0]] == '+')
+                    if(game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '+')
                         game->player_room = -1;
                     break;
 
@@ -1058,6 +1057,7 @@ void play_game(Game *game) {
                             }
                         }
                     }
+
                     // show new room
                     Room *temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
                     for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
