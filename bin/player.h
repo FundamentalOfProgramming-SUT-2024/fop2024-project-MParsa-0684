@@ -2,7 +2,7 @@
 #define player_h
 
 #include <stdio.h>
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -140,9 +140,6 @@ void score_table() {
         clear_space();
         move(4 ,69);
         attron(A_BOLD | COLOR_PAIR(1));
-        init_pair(4, COLOR_RED, COLOR_BLACK);
-        init_pair(5, COLOR_GREEN, COLOR_BLACK);
-        init_pair(6, COLOR_YELLOW, COLOR_BLACK);
         addstr("REGUE GAME");
         move(5 ,63);
         addstr("<<<<< Score table >>>>>");

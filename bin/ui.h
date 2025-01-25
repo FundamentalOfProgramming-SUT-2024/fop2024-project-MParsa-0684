@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 #include "menus.h"
 #include "ui.h"
 #include <locale.h>
@@ -22,6 +22,64 @@
 #define COLOR_DIMGRAY 10
 #define COLOR_GOLD 11
 #define COLOR_DARKORANGE 12
+
+// char ROGUE[6][45] = {
+//     {"███████╗ ██████╗  ██████╗ ██╗   ██╗███████╗"},
+//     {"██╔══██║██╔═══██╗██╔════╝ ██║   ██║██╔════╝"},
+//     {"███████╝██║   ██║██║  ███╗██║   ██║█████╗  "},
+//     {"██╔═╗██║██║   ██║██║   ██║██║   ██║██╔══╝  "},
+//     {"██║ ║██║╚██████╔╝╚██████╔╝ ╚█████╝ ███████╗"},
+//     {"╚═╝ ╚═╝  ╚═════╝  ╚═════╝   ╚═══╝  ╚══════╝"},
+// };
+
+// char GAME[6][38] = {
+//     {" ██████╗  █████╗ ███╗   ███╗███████╗"},
+//     {"██╔════╝ ██╔══██╗████╗ ████║██╔════╝"},
+//     {"██║  ███╗███████║██╔████╔██║█████╗  "},
+//     {"██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  "},
+//     {"╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗"},
+//     {" ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝"},
+// };
+
+/*
+char ROGUE[6][45] = {
+    {"#######╗ ######╗  ######╗ ##╗   ##╗#######╗"},
+    {"##╔══##║##╔═══##╗##╔════╝ ##║   ##║##╔════╝"},
+    {"#######╝##║   ##║##║  ###╗##║   ##║#####╗  "},
+    {"##╔═╗##║##║   ##║##║   ##║##║   ##║##╔══╝  "},
+    {"##║ ║##║╚######╔╝╚######╔╝ ╚#####╝ #######╗"},
+    {"╚═╝ ╚═╝  ╚═════╝  ╚═════╝   ╚═══╝  ╚══════╝"},
+};
+
+char GAME[6][38] = {
+    {" ######╗  #####╗ ###╗   ###╗#######╗"},
+    {"##╔════╝ ##╔══##╗####╗ ####║##╔════╝"},
+    {"##║  ###╗#######║##╔####╔##║#####╗  "},
+    {"##║   ##║##╔══##║##║╚##╔╝##║##╔══╝  "},
+    {"╚######╔╝##║  ##║##║ ╚═╝ ##║#######╗"},
+    {" ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝"},
+};
+
+*/
+
+char ROGUE[6][45] = {
+    {"####### ######  ###### ##   ## #######"},
+    {"##   ## ##   ## ##      ##   ## ##     "},
+    {"####### ##   ## ##  ### ##   ## #####  "},
+    {"##   ## ##   ## ##   ## ##   ## ##     "},
+    {"##   ## ######  ######   ##### #######"},
+    {"##   ## ######   ####     ###  #######"},
+};
+
+char GAME[6][38] = {
+    {"######  ##### ###   ### #######"},
+    {"##      ## ## #### #### ##     "},
+    {"##  ### ##### ## #### ## ##### "},
+    {"##   ## ## ## ##  ##  ## ##    "},
+    {"######  ## ## ##      ## #######"},
+    {"######  ## ## ##      ## #######"},
+};
+
 
 void hx(const char* hex, short* r, short* g, short* b) {
     int red, green, blue;
@@ -47,6 +105,11 @@ void clear_space() {
     init_color(COLOR_BLUE, rr, gg, bb);
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
     init_pair(2, COLOR_BLACK, COLOR_BLUE);
+    init_pair(3, COLOR_RED, COLOR_BLUE);
+
+    init_pair(4, COLOR_RED, COLOR_BLACK);
+    init_pair(5, COLOR_GREEN, COLOR_BLACK);
+    init_pair(6, COLOR_YELLOW, COLOR_BLACK);
 
     hx(Firebrick_color, &r, &g, &b);
     init_color(COLOR_FIREBRICK, r, g, b);
@@ -107,14 +170,12 @@ void clear_space2() {
     init_color(COLOR_BLUE, rr, gg, bb);
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
     init_pair(2, COLOR_BLACK, COLOR_BLUE);
+    init_pair(3, COLOR_RED, COLOR_BLUE);
 
-    hx(back_color, &r, &g, &b);
-    init_color(COLOR_BLACK, r, g, b);
+    init_pair(4, COLOR_RED, COLOR_BLACK);
+    init_pair(5, COLOR_GREEN, COLOR_BLACK);
+    init_pair(6, COLOR_YELLOW, COLOR_BLACK);
 
-    hx(font_color, &rr, &gg, &bb);
-    init_color(COLOR_BLUE, rr, gg, bb);
-    init_pair(1, COLOR_BLUE, COLOR_BLACK);
-    init_pair(2, COLOR_BLACK, COLOR_BLUE);
 
     hx(Firebrick_color, &r, &g, &b);
     init_color(COLOR_FIREBRICK, r, g, b);

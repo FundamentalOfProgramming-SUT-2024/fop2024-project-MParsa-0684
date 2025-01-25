@@ -2,7 +2,7 @@
 #define menus_h
 
 #include <stdio.h>
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -30,7 +30,6 @@ void main_menu() {
 
     // Initial setups
     // setlocale(LC_ALL, "");
-    clear_space();
     noecho();
     // cbreak();
     curs_set(FALSE);
@@ -38,16 +37,8 @@ void main_menu() {
     refresh();
 
     // Page UI
-    start_color();
-    short r, g, b;
-    hx(back_color, &r, &g, &b);
-    init_color(COLOR_BLACK, r, g, b);
-    hx(font_color, &r, &g, &b);
-    init_color(COLOR_BLUE, r, g, b);
-    init_pair(1, COLOR_BLUE, COLOR_BLACK);
-    init_pair(2, COLOR_BLACK, COLOR_BLUE);
-    init_pair(3, COLOR_RED, COLOR_BLUE);
-    
+    start_color();    
+    clear_space();
 
 
     bkgd(COLOR_PAIR(1));
@@ -63,6 +54,13 @@ void main_menu() {
     move(13 ,63);
     addstr("<<<<< Main  Menu >>>>>");
     attroff(A_BOLD);
+
+    for(int i = 18; i < 24; i++) {
+        move(i, 9);
+        addstr(ROGUE[i - 18]);
+        move(i, 97);
+        addstr(GAME[i - 18]);
+    }
 
     // Menu contents
     char mainMenu[3][100] = {"Create new accout", "Login accout", "Exit"}; 
@@ -153,7 +151,7 @@ void create_player() {
         attroff(A_BOLD);
         getstr(player->username);
         refresh();
-        
+
         // password
         move(0, 1);
         attron(COLOR_PAIR(3) | A_BOLD);
@@ -240,6 +238,13 @@ void login_player() {
     addstr("<<<<< Login Menu >>>>>");
     attroff(A_BOLD);
 
+    for(int i = 18; i < 24; i++) {
+        move(i, 9);
+        addstr(ROGUE[i - 18]);
+        move(i, 97);
+        addstr(GAME[i - 18]);
+    }
+
     // Menu contents
     char loginMenu[3][100] = { "Official Player", "Guest Player", "Go back"}; 
 
@@ -264,6 +269,12 @@ void login_player() {
         move(16 + location, 65);
         attron(COLOR_PAIR(1));
         addstr(loginMenu[location]);
+        for(int i = 18; i < 24; i++) {
+            move(i, 9);
+            addstr(ROGUE[i - 18]);
+            move(i, 97);
+            addstr(GAME[i - 18]);
+        }   
         attroff(COLOR_PAIR(1));
         
         switch (cursor) {
@@ -531,6 +542,12 @@ void player_menu() {
     printw("<<<<< Welcome %s >>>>>", player->username);
     attroff(A_BOLD);
 
+    for(int i = 18; i < 24; i++) {
+        move(i, 9);
+        addstr(ROGUE[i - 18]);
+        move(i, 97);
+        addstr(GAME[i - 18]);
+    }
 
     // Menu contents
     char playerMenu[5][100] = {"Create new game", "Continue old game", "Score table", "Settings", "Exit"}; 
@@ -569,6 +586,13 @@ void player_menu() {
             move(16 + i, 65);
             addstr(playerMenu[i]);
         }
+        for(int i = 18; i < 24; i++) {
+            move(i, 9);
+            addstr(ROGUE[i - 18]);
+            move(i, 97);
+            addstr(GAME[i - 18]);
+        }
+
         refresh();
         
         switch (cursor) {
@@ -601,6 +625,12 @@ void player_menu() {
         for(int i = 0; i < 5; i++) {
             move(16 + i, 65);
             addstr(playerMenu[i]);
+        }
+        for(int i = 18; i < 24; i++) {
+            move(i, 9);
+            addstr(ROGUE[i - 18]);
+            move(i, 97);
+            addstr(GAME[i - 18]);
         }
         refresh();
         move(16 + location, 65);

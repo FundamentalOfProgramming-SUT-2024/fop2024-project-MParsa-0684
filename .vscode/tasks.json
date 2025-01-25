@@ -1,0 +1,24 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Build Program",
+        "type": "shell",
+        "command": "gcc",
+        "args": [
+          "${file}",
+          "-o",
+          "${fileDirname}/${fileBasenameNoExtension}",
+          "-I/opt/homebrew/Cellar/ncurses/6.5/include",
+          "-L/opt/homebrew/Cellar/ncurses/6.5/lib",
+          "-lncursesw"
+        ],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": ["$gcc"],
+        "detail": "Builds the program"
+      }
+    ]
+  }
