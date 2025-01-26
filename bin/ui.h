@@ -63,21 +63,21 @@ char GAME[6][38] = {
 */
 
 char ROGUE[6][45] = {
-    {"####### ######  ###### ##   ## #######"},
-    {"##   ## ##   ## ##      ##   ## ##     "},
-    {"####### ##   ## ##  ### ##   ## #####  "},
-    {"##   ## ##   ## ##   ## ##   ## ##     "},
-    {"##   ## ######  ######   ##### #######"},
-    {"##   ## ######   ####     ###  #######"},
+    {"#######| ######|  ######|  ##|  ##| ######|"},
+    {"##|  ##| ##|  ##| ##|      ##|  ##| ##|    "},
+    {"#######| ##|  ##| ##| ###| ##|  ##| #####| "},
+    {"##|  ##| ##|  ##| ##|  ##| ##|  ##| ##|    "},
+    {"##|  ##| ######|  ######|   #####|  ######|"},
+    {"##|  ##| ######|   ####|     ###|   ######|"},
 };
 
 char GAME[6][38] = {
-    {"######  ##### ###   ### #######"},
-    {"##      ## ## #### #### ##     "},
-    {"##  ### ##### ## #### ## ##### "},
-    {"##   ## ## ## ##  ##  ## ##    "},
-    {"######  ## ## ##      ## #######"},
-    {"######  ## ## ##      ## #######"},
+    {"######|  ######| ###|  ###| #######|"},
+    {"##|      ##  ##| ####|####| ##|     "},
+    {"##| ###| ######| ##|######| #####|  "},
+    {"##|  ##| ##| ##| ##| ## ##| ##|     "},
+    {"######|  ##| ##| ##|    ##| #######|"},
+    {"######|  ##| ##| ##|    ##| #######|"},
 };
 
 
@@ -131,7 +131,12 @@ void clear_space() {
     init_color(COLOR_DARKORANGE, r, g, b);
     init_pair(12, COLOR_DARKORANGE, COLOR_BLACK);
     
-
+    init_pair(13, COLOR_RED, COLOR_BLACK);
+    init_pair(14, COLOR_GREEN, COLOR_BLACK);
+    init_pair(15, COLOR_RED, COLOR_BLUE);
+    init_pair(16, COLOR_GREEN, COLOR_BLUE);
+    init_pair(17, COLOR_DARKORANGE, COLOR_BLUE);
+    init_pair(18, COLOR_YELLOW, COLOR_BLUE);
     /*
 #define FIREBRICK 8
 #define FORESTGREEN 9
@@ -197,6 +202,12 @@ void clear_space2() {
     init_color(COLOR_DARKORANGE, r, g, b);
     init_pair(12, COLOR_DARKORANGE, COLOR_BLACK);
 
+    init_pair(13, COLOR_RED, COLOR_BLACK);
+    init_pair(14, COLOR_GREEN, COLOR_BLACK);
+    init_pair(15, COLOR_RED, COLOR_BLUE);
+    init_pair(16, COLOR_GREEN, COLOR_BLUE);
+    init_pair(17, COLOR_DARKORANGE, COLOR_BLUE);
+    init_pair(18, COLOR_YELLOW, COLOR_BLUE);
 }
 
 
