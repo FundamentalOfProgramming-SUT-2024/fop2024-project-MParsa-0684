@@ -246,10 +246,10 @@ typedef struct Game{
 
     int floor_num;
     int Health;
-    Food **foods;
+    Food ***foods;
     Gun ***gun;
     Spell ***spell;
-    int food_num;
+    int *food_num;
     int *gun_num;
     int *spell_num;
     Gun *current_gun;
@@ -272,6 +272,8 @@ void password_generator(Game *game, Locked_Door *locked_door, int dir);
 
 void action_game(Game *game, int dir, int time_passed) {
     Room *temp_room;
+    char *str;
+    Food_Type ft;
             game->floors[game->player_floor].visit[game->player_location.y][game->player_location.x] = true;
             int ii = 1;
             switch(game->floors[game->player_floor].map[game->player_location.y][game->player_location.x]) {
@@ -457,6 +459,48 @@ void action_game(Game *game, int dir, int time_passed) {
                         }    
                         attroff(COLOR_PAIR(3) | A_BOLD);
                     }
+                    break;
+
+                case 'F':
+                    for(int ii = 0; ii < game->floors[game->player_floor].Rooms[game->player_room].food_num; ii++) {
+                        if(game->floors[game->player_floor].Rooms[game->player_room].foods[ii] != NULL && game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.y == game->player_location.y && game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.x == game->player_location.x) {
+                            game->food_num[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary]++;
+                            ft = game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type;
+                            game->foods[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary] = (Food **) realloc(game->foods[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary], game->food_num[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type] * sizeof(Food *));
+                            game->foods[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary][game->food_num[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary] - 1] = game->floors[game->player_floor].Rooms[game->player_room].foods[ii];
+                            game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.y][game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.x] = '.';
+                            game->floors[game->player_floor].Rooms[game->player_room].foods[ii] = NULL;
+                        }
+                    }
+
+                    move(0, 1);
+                    attron(COLOR_PAIR(3) | A_BOLD);
+                    str = (char *) malloc(1000 * sizeof(char));
+                    strcpy(str, "You've taken a Food with type {");
+                    switch(ft) {
+                        case Ordinary:
+                            strcat(str, "Ordinary");
+                            break;
+                        case Excellent:
+                            strcat(str, "Excellent");
+                            break;
+                        case Magical:
+                            strcat(str, "Magical");
+                            break;
+                        case Toxic:
+                            strcat(str, "Toxic");
+                            break;
+
+                    }
+                    strcat(str, "}, You Press any key to continue...");
+                    addstr(str);
+                    getch();
+                    for(int i = 0; i < 146; i++) {
+                        move(0, i);
+                        addch(' ');
+                    }    
+                    attroff(COLOR_PAIR(3) | A_BOLD);
+                    free(str);
                     break;
                 default:
 

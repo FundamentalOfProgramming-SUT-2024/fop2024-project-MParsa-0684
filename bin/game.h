@@ -24,7 +24,7 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
 void create_new_floor(Floor *floor, int floor_num, Game *game);
 void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game *game);
 void in_room_road(Floor *floor, int floor_num);
-void paint_floor(Game *game, Floor *floor, WINDOW *game_window);
+void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed);
 void *play_sound(void *arg);
 
 // For creating new game
@@ -48,16 +48,17 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
 
     // Defines
     (*game)->floors = (Floor *) calloc(4, sizeof(Floor));
-    (*game)->floor_num = 4;
+    (*game)->floor_num = 0;
     
     (*game)->Health = 100;
     (*game)->total_gold = 0;
     
-    (*game)->foods = NULL;
-    (*game)->food_num = 0;
+    (*game)->foods = (Food ***) calloc(4, sizeof(Food **));
+    (*game)->food_num = (int *) calloc(4, sizeof(int));
 
     (*game)->gun = (Gun ***) calloc(5, sizeof(Gun **));
     (*game)->gun_num = (int *) calloc(5, sizeof(int));
+    
     (*game)->gun[0] = (Gun **) calloc(1, sizeof(Gun *));
     (*game)->gun[0][0] = (Gun *) calloc(1, sizeof(Gun));
     strcpy((*game)->gun[0][0][0].name,"Mace"), (*game)->gun[0][0][0].type = Mace;
@@ -683,7 +684,7 @@ void play_game(Game *game) {
     bool is_moved = false;
     int dir = -1;
     while(flag) {
-        paint_floor(game, &game->floors[game->player_floor], game_window);
+        paint_floor(game, &game->floors[game->player_floor], game_window, time_passed);
         
         is_moved = false;
         int c = getch();
@@ -1034,13 +1035,12 @@ void play_game(Game *game) {
         //! actions after moving 
 
         if(is_moved == true && is_take_element == true) {
-            time_passed++;
             action_game(game, dir, time_passed);
         } 
         else if(is_moved == true){
-            time_passed++;
             is_take_element = true;
         }
+        time_passed++;
         
     }
 
@@ -1051,7 +1051,7 @@ void play_game(Game *game) {
     delwin(game_window);
 }
 
-void paint_floor(Game *game, Floor *floor, WINDOW *game_window) {
+void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed) {
     noecho();
     curs_set(FALSE);
     clear_space2();
@@ -1145,6 +1145,9 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window) {
         addstr("PRESS >/< to go up/down stair...");
         attroff(COLOR_PAIR(3) | A_BOLD);
     }
+
+    if(time_passed % 1 == 0)
+        game->Health -= 2;
 
 
     attron(COLOR_PAIR(2) | A_BOLD);
