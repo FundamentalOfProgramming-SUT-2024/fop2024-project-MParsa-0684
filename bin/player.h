@@ -144,7 +144,7 @@ void score_table() {
         move(5 ,63);
         addstr("<<<<< Score table >>>>>");
         move(7, 13);
-        addstr("    Rank\t\tUsername\t\tTotal Score\t\tTotal Gold\t\tGame Finished\t\tPlayTime\t\t");
+        addstr("    Rank\t\tUsername\t\tTotal Score\t\tTotal Gold\t\tGame Finished\t\tPlayTime\t");
         attroff(A_BOLD);
         for(int i = 0; i < 32 && start_table + i < p_size; i++) {
             
@@ -175,7 +175,12 @@ void score_table() {
                 addstr("    ");
 
             move(8 + i, 17);
-            printw("%d\t\t%s\t\t\t%d\t\t\t%d\t\t\t%d\t\t\t%ld(s)", (start_table + i + 1), p_table[start_table + i]->username, p_table[start_table + i]->total_score, p_table[start_table + i]->total_gold, p_table[start_table + i]->num_finished, p_table[start_table + i]->time_experience);
+            time_t diff = difftime(time(NULL), p_table[start_table + i]->time_experience);
+            int d = diff / 86400;
+            int h = (diff % 86400) / 3600;
+            int m = (diff % 3600) / 60;
+            int s = diff % 60;
+            printw("%d\t\t%s\t\t\t%d\t\t\t%d\t\t\t%d\t\t\t%.2d:%.2d:%.2d:%.2d(s)", (start_table + i + 1), p_table[start_table + i]->username, p_table[start_table + i]->total_score, p_table[start_table + i]->total_gold, p_table[start_table + i]->num_finished, d, h, m, s);
 
             if(strcmp(p_table[start_table + i]->username, player->username) == 0) 
                 attroff(A_BOLD | A_BLINK);

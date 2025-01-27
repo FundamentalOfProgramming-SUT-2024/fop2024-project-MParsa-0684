@@ -166,6 +166,7 @@ typedef struct Gun {
     Location location;
     wchar_t unicode;
     int damage;
+    int counter;
 
 } Gun;
 
@@ -259,13 +260,16 @@ typedef struct Game{
     enum Difficulty game_difficulty;
     int player_color;
 
+    int time_power;
+    bool power_up;
+    bool speed_up;
 } Game;
 
 void action_game(Game *game, int dir, int time_passed);
 void whole_game(Game *game, Floor *floor);
 bool is_in_map(int y, int x);
 void search_map(Game *game);
-void foods_menu(Game *game);
+void foods_menu(Game *game, int time_passed);
 void guns_menu(Game *game);
 void spells_menu(Game *game);
 void password_generator(Game *game, Locked_Door *locked_door, int dir);
@@ -274,9 +278,13 @@ void action_game(Game *game, int dir, int time_passed) {
     Room *temp_room;
     char *str;
     Food_Type ft;
+    Gold_Type gt;
+    Gun_Type ut;
+    Spell_Type st;
             game->floors[game->player_floor].visit[game->player_location.y][game->player_location.x] = true;
             int ii = 1;
             switch(game->floors[game->player_floor].map[game->player_location.y][game->player_location.x]) {
+                // roads
                 case '#':
                     // expand road for player
                     while(ii < 6) {
@@ -294,6 +302,7 @@ void action_game(Game *game, int dir, int time_passed) {
                         game->player_room = -1;
                     break;
 
+                // Normal doors
                 case '+':
                     // locate new room for player_room
                     if(game->player_room == -1) {
@@ -315,6 +324,7 @@ void action_game(Game *game, int dir, int time_passed) {
                     }
                     break;
 
+                // Secret door
                 case '*':
                     // locate new room for player_room
                     if(game->player_room == -1) {
@@ -336,6 +346,7 @@ void action_game(Game *game, int dir, int time_passed) {
                     }
                     break;
                 
+                // Locked door
                 case '@':
                     // locate new room for player_room
                     if(game->player_room == -1) {
@@ -436,6 +447,7 @@ void action_game(Game *game, int dir, int time_passed) {
                     }
                     break;
 
+                // Password generator
                 case '&':
                     game->player_location.y -= directions[dir][1];
                     game->player_location.x -= directions[dir][0];
@@ -461,22 +473,26 @@ void action_game(Game *game, int dir, int time_passed) {
                     }
                     break;
 
+                // Taking food
                 case 'F':
                     for(int ii = 0; ii < game->floors[game->player_floor].Rooms[game->player_room].food_num; ii++) {
-                        if(game->floors[game->player_floor].Rooms[game->player_room].foods[ii] != NULL && game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.y == game->player_location.y && game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.x == game->player_location.x) {
+                        if(game->floors[game->player_floor].Rooms[game->player_room].foods[ii] != NULL && 
+                        game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.y == game->player_location.y && 
+                        game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.x == game->player_location.x) {
                             game->food_num[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary]++;
                             ft = game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type;
                             game->foods[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary] = (Food **) realloc(game->foods[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary], game->food_num[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type] * sizeof(Food *));
                             game->foods[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary][game->food_num[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary] - 1] = game->floors[game->player_floor].Rooms[game->player_room].foods[ii];
                             game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.y][game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->location.x] = '.';
+                            game->foods[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary][game->food_num[game->floors[game->player_floor].Rooms[game->player_room].foods[ii]->type - Ordinary] - 1]->time_passed = time_passed;
                             game->floors[game->player_floor].Rooms[game->player_room].foods[ii] = NULL;
                         }
                     }
 
                     move(0, 1);
-                    attron(COLOR_PAIR(3) | A_BOLD);
+                    attron(COLOR_PAIR(16) | A_BOLD);
                     str = (char *) malloc(1000 * sizeof(char));
-                    strcpy(str, "You've taken a Food with type {");
+                    strcpy(str, "You've taken a FOOD with type {");
                     switch(ft) {
                         case Ordinary:
                             strcat(str, "Ordinary");
@@ -492,15 +508,147 @@ void action_game(Game *game, int dir, int time_passed) {
                             break;
 
                     }
-                    strcat(str, "}, You Press any key to continue...");
+                    strcat(str, "}, Press any key to continue...");
                     addstr(str);
                     getch();
                     for(int i = 0; i < 146; i++) {
                         move(0, i);
                         addch(' ');
                     }    
+                    attroff(COLOR_PAIR(16) | A_BOLD);
+                    free(str);
+                    break;
+
+                // Taking gold
+                case 'G':
+                    str = (char *) malloc(1000 * sizeof(char));
+                    strcpy(str, "You've taken a GOLD with type {");
+                    for(int ii = 0; ii < game->floors[game->player_floor].Rooms[game->player_room].gold_num; ii++) {
+                        if(game->floors[game->player_floor].Rooms[game->player_room].golds[ii] != NULL && 
+                        game->floors[game->player_floor].Rooms[game->player_room].golds[ii]->location.y == game->player_location.y && 
+                        game->floors[game->player_floor].Rooms[game->player_room].golds[ii]->location.x == game->player_location.x) {
+                            gt = game->floors[game->player_floor].Rooms[game->player_room].golds[ii]->type;
+                            switch(gt) {
+                                case Regular:
+                                    strcat(str, "Regular}! You're Total Golds increased by 1! Press any key to continue...");
+                                    game->total_gold += gt;
+                                    break;
+                                case Black:
+                                    strcat(str, "Black}! You're Total Golds increased by 10! Press any key to continue...");
+                                    game->total_gold += gt;
+                                    break;
+                            }
+                            game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].golds[ii]->location.y][game->floors[game->player_floor].Rooms[game->player_room].golds[ii]->location.x] = '.';
+                            game->floors[game->player_floor].Rooms[game->player_room].golds[ii] = NULL;
+                        }
+                    }
+
+                    move(0, 1);
+                    attron(COLOR_PAIR(18) | A_BOLD);
+                    addstr(str);
+                    getch();
+                    for(int i = 0; i < 146; i++) {
+                        move(0, i);
+                        addch(' ');
+                    }    
+                    attroff(COLOR_PAIR(18) | A_BOLD);
+                    free(str);
+                    break;
+
+                // Taking gun
+                case 'U':
+                    for(int ii = 0; ii < game->floors[game->player_floor].Rooms[game->player_room].gun_num; ii++) {
+                        if(game->floors[game->player_floor].Rooms[game->player_room].guns[ii] != NULL && 
+                        game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->location.y == game->player_location.y && 
+                        game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->location.x == game->player_location.x) {
+                            ut = game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->type;
+                            if(!(ut == Sword && game->gun_num[4] > 0)) {
+                                game->gun_num[game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->type - Mace]++;
+                                game->gun[game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->type - Mace] = (Gun **) realloc(game->gun[game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->type - Mace], game->gun_num[game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->type] * sizeof(Gun *));
+                                game->gun[game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->type - Mace][game->gun_num[game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->type - Mace] - 1] = game->floors[game->player_floor].Rooms[game->player_room].guns[ii];
+                            }
+                            game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->location.y][game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->location.x] = '.';
+                            game->floors[game->player_floor].Rooms[game->player_room].guns[ii] = NULL;
+                        }
+                    }
+
+                    move(0, 1);
+                    attron(COLOR_PAIR(3) | A_BOLD);
+                    str = (char *) malloc(1000 * sizeof(char));
+                    strcpy(str, "You've taken a GUN with type {");
+                    switch(ut) {
+                        case Mace:
+                            break;
+                        case Dagger:
+                            strcat(str, "Dagger");
+                            break;
+                        case Magic_Wand:
+                            strcat(str, "Magic_Wand");
+                            break;
+                        case Normal_Arrow:
+                            strcat(str, "Normal_Arrow");
+                            break;
+                        case Sword:
+                            strcat(str, "Sword");
+                            break;
+
+                    }
+                    strcat(str, "}, Press any key to continue...");
+                    if(!(ut == Sword && game->gun_num[4] > 0)) {
+                        addstr(str);
+                        getch();
+                    }
+                    for(int i = 0; i < 146; i++) {
+                        move(0, i);
+                        addch(' ');
+                    }    
                     attroff(COLOR_PAIR(3) | A_BOLD);
                     free(str);
+                    break;
+                
+                // Taking spell
+                case 'S':
+                    for(int ii = 0; ii < game->floors[game->player_floor].Rooms[game->player_room].spell_num; ii++) {
+                        if(game->floors[game->player_floor].Rooms[game->player_room].spells[ii] != NULL && 
+                        game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->location.y == game->player_location.y && 
+                        game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->location.x == game->player_location.x) {
+                            game->spell_num[game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->type - Health]++;
+                            st = game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->type;
+                            game->spell[game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->type - Health] = (Spell **) realloc(game->spell[game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->type - Health], game->spell_num[game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->type] * sizeof(Spell *));
+                            game->spell[game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->type - Health][game->spell_num[game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->type - Health] - 1] = game->floors[game->player_floor].Rooms[game->player_room].spells[ii];
+                            game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->location.y][game->floors[game->player_floor].Rooms[game->player_room].spells[ii]->location.x] = '.';
+                            game->floors[game->player_floor].Rooms[game->player_room].spells[ii] = NULL;
+                        }
+                    }
+
+                    move(0, 1);
+                    attron(COLOR_PAIR(17) | A_BOLD);
+                    str = (char *) malloc(1000 * sizeof(char));
+                    strcpy(str, "You've taken a SPELL with type {");
+                    switch(st) {
+                        case Health:
+                            strcat(str, "Health");
+                            break;
+                        case Speed:
+                            strcat(str, "Speed");
+                            break;
+                        case Damage:
+                            strcat(str, "Damage");
+                            break;
+
+                    }
+                    strcat(str, "}, Press any key to continue...");
+                    addstr(str);
+                    getch();
+                    for(int i = 0; i < 146; i++) {
+                        move(0, i);
+                        addch(' ');
+                    }    
+                    attroff(COLOR_PAIR(17) | A_BOLD);
+                    free(str);
+                    break;
+
+
                     break;
                 default:
 
@@ -535,6 +683,11 @@ void whole_game(Game *game, Floor *floor) {
                             break;
                         }
                     }
+                    flag = true;
+                }
+                if(!flag && index == 'd' || index == 'f' || index == 'g' || index == 's' || index == 'u') {
+                    wattron(whole_map, COLOR_PAIR(19) | A_BOLD);
+                    color_num = 19;
                     flag = true;
                 }
 
@@ -574,6 +727,9 @@ void whole_game(Game *game, Floor *floor) {
                 mvwaddch(whole_map, i, j, index);
                 wrefresh(whole_map);
                 wattroff(whole_map, COLOR_PAIR(color_num));
+                if(index == 'd' || index == 'f' || index == 'g' || index == 's' || index == 'u')
+                    wattroff(whole_map, A_BOLD);
+            
             }
         }
     }
@@ -642,7 +798,120 @@ void search_map(Game *game) {
     delwin(s_window);
 }
 
-void foods_menu(Game *game) {
+void foods_menu(Game *game, int time_passed) {
+    WINDOW *food_menu = newwin(40, 146, 1, 1);
+    char str[3][100] = {
+        "    Ordinary\t\tNo\t\t\tNo\t\t\tYes\t\t",
+        "    Excellent\t\tYes\t\t\tNo\t\t\tYes\t\t",
+        "    Magical\t\tNo\t\t\tYes\t\t\tYes\t\t"
+    };
+    for(int i = 0; i < 3; i++) {
+        sprintf(str[i] + strlen(str[i]), "%d\t", game->food_num[i]);
+    }
+    int location = 0;
+
+    bool flag = true;
+    while(flag) {
+        wclear(food_menu);
+        wattron(food_menu, COLOR_PAIR(9) | A_BOLD);
+        mvwaddstr(food_menu, 12, 62, "<<<<< FOOD MENU >>>>>");
+        mvwaddstr(food_menu, 14, 25, "    Type\t\tPower_up\t\tSpeed_up\t\tHealth\t\tNumber");
+        mvwaddstr(food_menu, 15, 25, "------------------------------------------------------------------------------------------------");
+        wattron(food_menu, A_BOLD);
+
+        for(int i = 0; i < 3; i++) 
+        mvwaddstr(food_menu, 16 + i, 25, str[i]);
+        wattroff(food_menu, COLOR_PAIR(9));
+        wattron(food_menu, COLOR_PAIR(20));
+        mvwaddstr(food_menu, 16 + location, 25, str[location]);
+        wattroff(food_menu, COLOR_PAIR(20));
+        wrefresh(food_menu);
+
+        int c = getch();
+        switch(c) {
+            case 'k':
+                location = (location + 1) % 3;
+                break;
+            case 'j':
+                location = (location - 1) % 3;
+                location = (location + 3) % 3;
+                break;
+            case 'q':
+                delwin(food_menu);
+                return;
+                break;
+            case KEY_ENTER:
+                flag = false;
+                break;
+        }
+    }
+
+    char *mas = (char *) malloc(200 * sizeof(char));
+    if(game->food_num[location] == 0) {
+        strcpy(mas, "There is no FOOD with this Type, Press any key to continue...");
+    }
+    else {
+        Food *food = game->foods[location][game->food_num[location] - 1];
+        if((time_passed - food->time_passed) > 180) {
+            strcpy(mas, "The Food's Expired time is passed! ");
+            if(food->type == Excellent || food->type == Magical) {
+                game->Health = 100;
+                strcat(mas, "Excellent/Magical Food transforms to Ordinary Food! Your Health is 100%%! Press any key to continue...");
+            }
+            else {
+                game->Health -= 10;
+                strcat(mas, "Ordinary Food transforms to Toxic Food! Your Health decreased by 10%%! Press any key to continue...");
+            }
+        }
+        else {
+            strcpy(mas, "You used FOOD with Type {");
+            switch(food->type) {
+                case Ordinary:
+                    game->Health = 100;
+                    game->power_up = false;
+                    game->speed_up = false;
+                    game->time_power = -1;
+                    strcat(mas, "Ordinary}");
+                    break;
+                case Excellent:
+                    game->Health = 100;
+                    game->power_up = true;
+                    game->speed_up = false;
+                    game->time_power = time_passed;
+                    strcat(mas, "Excellent}");
+                    break;
+                case Magical:
+                    game->Health = 100;
+                    game->power_up = false;
+                    game->speed_up = true;
+                    game->time_power = time_passed;
+                    strcat(mas, "Magical}");
+                    break;
+                case Toxic:
+                    break;
+            }
+            strcat(mas, ", Effects of before FOOD (if lasts) will disapear! Press any key to continue...");
+        }
+        game->foods[location][game->food_num[location] - 1] = NULL;
+        game->food_num[location]--;
+        free(food);
+    }
+
+    move(0, 1);
+    attron(COLOR_PAIR(3) | A_BOLD);
+    addstr(mas);
+
+    int c = getch();
+    for(int i = 0; i < 146; i++) {
+        move(0, i);
+        addch(' ');
+    }    
+
+    attroff(COLOR_PAIR(3) | A_BOLD);
+    free(mas);
+    
+    delwin(food_menu);
+
 
 }
 
@@ -660,7 +929,7 @@ void password_generator(Game *game, Locked_Door *locked_door, int dir) {
 
     WINDOW *alert = newwin(1, 72, 0, 0);
     wattron(alert, COLOR_PAIR(3) | A_BOLD);
-    mvwprintw(alert, 0, 1,"Your Password is {%.4d}; This Password will disapear within 5 Second...", locked_door->password);
+    mvwprintw(alert, 0, 0," Your Password is {%.4d}; This Password will disapear within 5 Second...", locked_door->password);
     wrefresh(alert);
     sleep(5);
 

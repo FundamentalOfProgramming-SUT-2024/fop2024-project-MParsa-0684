@@ -58,10 +58,10 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
 
     (*game)->gun = (Gun ***) calloc(5, sizeof(Gun **));
     (*game)->gun_num = (int *) calloc(5, sizeof(int));
-    
+
     (*game)->gun[0] = (Gun **) calloc(1, sizeof(Gun *));
     (*game)->gun[0][0] = (Gun *) calloc(1, sizeof(Gun));
-    strcpy((*game)->gun[0][0][0].name,"Mace"), (*game)->gun[0][0][0].type = Mace;
+    strcpy((*game)->gun[0][0][0].name,"Mace"), (*game)->gun[0][0][0].type = Mace, (*game)->gun[0][0][0].counter = 1, (*game)->gun[0][0][0].damage = 5;
     (*game)->gun_num[0]++;
     (*game)->current_gun = (*game)->gun[0][0];
 
@@ -73,6 +73,7 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
     (*game)->game_difficulty = difficulty;
     (*game)->player_color = color;
 
+    (*game)->time_power = -1;
 
     for(int i = 0; i < 4; i++) {
         for(int j = 0; j < 40; j++) {
@@ -236,7 +237,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 
     // Food configuration
     room->foods = (Food **) calloc((room->food_num), sizeof(Food *));
-    Food_Type ftype[7] = {Ordinary, Excellent, Ordinary, Magical, Toxic, Ordinary, Ordinary};
+    Food_Type ftype[7] = {Magical, Excellent, Ordinary, Magical, Ordinary, Excellent, Ordinary};
     for(int i = 0; i < room->food_num; i++) {
         int ft = rand() % 7;
         room->foods[i] = (Food *) calloc(1, sizeof(Food));
@@ -310,23 +311,25 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                 floor->map[room->guns[i]->location.y][room->guns[i]->location.x] = 'U';
                 switch(room->guns[i]->type) {
                     case Mace:
-                        room->guns[i]->damage = 5;
-                        //unicode
                         break;
                     case Dagger:
                         room->guns[i]->damage = 12;
+                        room->guns[i]->counter = 10;
                         //unicode
                         break;
                     case Magic_Wand:
                         room->guns[i]->damage = 15;
+                        room->guns[i]->counter = 8;
                         //unicode
                         break;
                     case Normal_Arrow:
                         room->guns[i]->damage = 5;
+                        room->guns[i]->counter = 20;
                         //unicode
                         break;
                     case Sword:
                         room->guns[i]->damage = 10;
+                        room->guns[i]->counter = 1;
                         //unicode
                         break;
                 }
@@ -703,6 +706,26 @@ void play_game(Game *game) {
                     }
                     is_f = false;
                 }
+                else if(game->speed_up == true) {
+                    if(game->player_location.y > 0 && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != ' ' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '&') {
+                        game->player_location.y--;    
+                    }
+                    if(game->player_location.y > 0 && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != ' ' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '&') {
+                        game->player_location.y--;    
+                    }
+                }
                 else if(game->player_location.y > 0 && 
                 game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '_' && 
                 game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x] != '|' && 
@@ -732,6 +755,26 @@ void play_game(Game *game) {
                         game->player_location.y++;
                     }
                     is_f = false;    
+                }
+                else if(game->speed_up == true){
+                    if(game->player_location.y < 39 && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != ' ' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '&') {
+                        game->player_location.y++;
+                    }
+                    if(game->player_location.y < 39 && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != ' ' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '&') {
+                        game->player_location.y++;
+                    }
                 }
                 else if(game->player_location.y < 39 && 
                 game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x] != '_' && 
@@ -763,6 +806,26 @@ void play_game(Game *game) {
                     }
                     is_f = false;
                 }
+                else if(game->speed_up == true) {
+                    if(game->player_location.x < 145 && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != ' ' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '&') {
+                        game->player_location.x++;
+                    }
+                    if(game->player_location.x < 145 && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != ' ' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '&') {
+                        game->player_location.x++;
+                    }
+                }
                 else if(game->player_location.x < 145 && 
                 game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '|' && 
                 game->floors[game->player_floor].map[game->player_location.y][game->player_location.x + 1] != '_' && 
@@ -792,6 +855,26 @@ void play_game(Game *game) {
                         game->player_location.x--;
                     }
                     is_f = false;
+                }
+                else if(game->speed_up == true) {
+                    if(game->player_location.x > 0 && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != ' ' &&
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '&') {
+                        game->player_location.x--;
+                    }
+                    if(game->player_location.x > 0 && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != ' ' &&
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '&') {
+                        game->player_location.x--;
+                    }
                 }
                 else if(game->player_location.x > 0 && 
                 game->floors[game->player_floor].map[game->player_location.y][game->player_location.x - 1] != '|' && 
@@ -823,6 +906,26 @@ void play_game(Game *game) {
                     }
                     is_f = false;
                 }
+                else if(game->speed_up == true) {
+                    if(game->player_location.x > 0 && game->player_location.y > 0 && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != ' ' &&
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '&') {
+                        game->player_location.x--, game->player_location.y--;
+                    }
+                    if(game->player_location.x > 0 && game->player_location.y > 0 && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != ' ' &&
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '&') {
+                        game->player_location.x--, game->player_location.y--;
+                    }
+                }
                 else if(game->player_location.x > 0 && game->player_location.y > 0 && 
                 game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '_' && 
                 game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x - 1] != '|' && 
@@ -852,6 +955,26 @@ void play_game(Game *game) {
                         game->player_location.x++, game->player_location.y--;
                     }
                     is_f = false;
+                }
+                else if(game->speed_up == true) {
+                    if(game->player_location.x < 145 && game->player_location.y > 0 && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != ' ' &&
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '&') {
+                        game->player_location.x++, game->player_location.y--;
+                    }
+                    if(game->player_location.x < 145 && game->player_location.y > 0 && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != ' ' &&
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '&') {
+                        game->player_location.x++, game->player_location.y--;
+                    }
                 }
                 else if(game->player_location.x < 145 && game->player_location.y > 0 && 
                 game->floors[game->player_floor].map[game->player_location.y - 1][game->player_location.x + 1] != '_' && 
@@ -883,6 +1006,26 @@ void play_game(Game *game) {
                     }
                     is_f = false;
                 }
+                else if(game->speed_up == true) {
+                    if(game->player_location.x > 0 && game->player_location.y < 39 && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != ' ' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '&') {
+                        game->player_location.x--, game->player_location.y++;
+                    }
+                    if(game->player_location.x > 0 && game->player_location.y < 39 && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != ' ' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '&') {
+                        game->player_location.x--, game->player_location.y++;
+                    }
+                }
                 else if(game->player_location.x > 0 && game->player_location.y < 39 && 
                 game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '_' && 
                 game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x - 1] != '|' && 
@@ -912,6 +1055,26 @@ void play_game(Game *game) {
                         game->player_location.x++, game->player_location.y++;
                     }
                     is_f = false;
+                }
+                else if(game->speed_up == true) {
+                    if(game->player_location.x < 145 && game->player_location.y < 39 && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != ' ' &&
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '&') {
+                        game->player_location.x++, game->player_location.y++;
+                    }
+                    if(game->player_location.x < 145 && game->player_location.y < 39 && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '_' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '|' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != ' ' &&
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '@' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '+' && 
+                    game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '&') {
+                        game->player_location.x++, game->player_location.y++;
+                    }
                 }
                 else if(game->player_location.x < 145 && game->player_location.y < 39 && 
                 game->floors[game->player_floor].map[game->player_location.y + 1][game->player_location.x + 1] != '_' && 
@@ -1003,7 +1166,7 @@ void play_game(Game *game) {
 
             // menu for foods to eat
             case 'e':
-                foods_menu(game);
+                foods_menu(game, time_passed);
                 break;
 
             // munu for guns to take
@@ -1018,7 +1181,7 @@ void play_game(Game *game) {
 
             // for using gun
             case ' ':
-
+                // use bool power_up to double the damage
                 break;
 
             // for repeating gun usage again
@@ -1068,7 +1231,7 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed)
                     color_num = 1;
                     flag = true;
                 }
-                if(index == '@') {
+                if(!flag && index == '@') {
                     for(int i = 0; i < 6; i++) {
                         if(floor->Rooms[i].locked_door != NULL) {
                             if(floor->Rooms[i].locked_door->is_visited == true) {
@@ -1082,6 +1245,11 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed)
                             break;
                         }
                     }
+                    flag = true;
+                }
+                if(!flag && index == 'd' || index == 'f' || index == 'g' || index == 's' || index == 'u') {
+                    wattron(game_window, COLOR_PAIR(19) | A_BOLD);
+                    color_num = 19;
                     flag = true;
                 }
 
@@ -1112,7 +1280,7 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed)
                 if(index == '^')
                     index = '.';
                 if(index == '*') {
-                    if((i < 39 && floor->map[i + 1][j] == '#') || (i > 0 && floor->map[i - 1][j] == '#'))
+                    if((j < 145 && floor->map[i][j + 1] == '_') || (j > 0 && floor->map[i][j - 1] == '_'))
                         index = '_';
                     else
                         index = '|';
@@ -1121,6 +1289,8 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed)
                 mvwaddch(game_window, i, j, index);
                 wrefresh(game_window);
                 wattroff(game_window, COLOR_PAIR(color_num));
+                if(index == 'd' || index == 'm' || index == 'g' || index == 's' || index == 'u')
+                    wattroff(game_window, A_BOLD);
             }
         }
 
@@ -1146,13 +1316,20 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed)
         attroff(COLOR_PAIR(3) | A_BOLD);
     }
 
-    if(time_passed % 1 == 0)
-        game->Health -= 2;
+    // Logics
+    if(time_passed % 15 == 0 && time_passed != 0)
+        game->Health -= 1;
+    if(game->time_power != -1 && (time_passed - game->time_power) > 10) {
+        game->power_up = false;
+        game->speed_up = false;
+        game->time_power = -1;
+    }
+    
 
 
     attron(COLOR_PAIR(2) | A_BOLD);
     move(41, 0);
-    printw(" \t\tHealth: %d%%\t\tGun: %s\tGold: %d\t\tFloor: %d\tPress 'q' to Save & Quit the game!", game->Health, game->current_gun->name, game->total_gold, (game->player_floor + 1));
+    printw(" \tGame_Name: %s\tHealth: %d%%\tGun: %s\tGold: %d\t\tFloor: %d\tPress 'q' to Save & Quit the game!", game->name, game->Health, game->current_gun->name, game->total_gold, (game->player_floor + 1));
     attroff(COLOR_PAIR(2) | A_BOLD);
         
     

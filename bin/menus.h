@@ -55,11 +55,11 @@ void main_menu() {
     addstr("<<<<< Main  Menu >>>>>");
     attroff(A_BOLD);
 
-    for(int i = 18; i < 24; i++) {
+    for(int i = 14; i < 20; i++) {
         move(i, 9);
-        addstr(ROGUE[i - 18]);
+        addstr(ROGUE[i - 14]);
         move(i, 97);
-        addstr(GAME[i - 18]);
+        addstr(GAME[i - 14]);
     }
 
     // Menu contents
@@ -238,11 +238,11 @@ void login_player() {
     addstr("<<<<< Login Menu >>>>>");
     attroff(A_BOLD);
 
-    for(int i = 18; i < 24; i++) {
+    for(int i = 14; i < 20; i++) {
         move(i, 9);
-        addstr(ROGUE[i - 18]);
+        addstr(ROGUE[i - 14]);
         move(i, 97);
-        addstr(GAME[i - 18]);
+        addstr(GAME[i - 14]);
     }
 
     // Menu contents
@@ -269,11 +269,11 @@ void login_player() {
         move(16 + location, 65);
         attron(COLOR_PAIR(1));
         addstr(loginMenu[location]);
-        for(int i = 18; i < 24; i++) {
+        for(int i = 14; i < 20; i++) {
             move(i, 9);
-            addstr(ROGUE[i - 18]);
+            addstr(ROGUE[i - 14]);
             move(i, 97);
-            addstr(GAME[i - 18]);
+            addstr(GAME[i - 14]);
         }   
         attroff(COLOR_PAIR(1));
         
@@ -542,11 +542,11 @@ void player_menu() {
     printw("<<<<< Welcome %s >>>>>", player->username);
     attroff(A_BOLD);
 
-    for(int i = 18; i < 24; i++) {
+    for(int i = 14; i < 20; i++) {
         move(i, 9);
-        addstr(ROGUE[i - 18]);
+        addstr(ROGUE[i - 14]);
         move(i, 97);
-        addstr(GAME[i - 18]);
+        addstr(GAME[i - 14]);
     }
 
     // Menu contents
@@ -586,11 +586,11 @@ void player_menu() {
             move(16 + i, 65);
             addstr(playerMenu[i]);
         }
-        for(int i = 18; i < 24; i++) {
+        for(int i = 14; i < 20; i++) {
             move(i, 9);
-            addstr(ROGUE[i - 18]);
+            addstr(ROGUE[i - 14]);
             move(i, 97);
-            addstr(GAME[i - 18]);
+            addstr(GAME[i - 14]);
         }
 
         refresh();
@@ -626,11 +626,11 @@ void player_menu() {
             move(16 + i, 65);
             addstr(playerMenu[i]);
         }
-        for(int i = 18; i < 24; i++) {
+        for(int i = 14; i < 20; i++) {
             move(i, 9);
-            addstr(ROGUE[i - 18]);
+            addstr(ROGUE[i - 14]);
             move(i, 97);
-            addstr(GAME[i - 18]);
+            addstr(GAME[i - 14]);
         }
         refresh();
         move(16 + location, 65);

@@ -10,6 +10,7 @@
         "limits": "cpp",
         "ratio": "cpp",
         "tuple": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "__locale": "cpp"
     }
 }

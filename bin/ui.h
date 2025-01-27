@@ -17,11 +17,13 @@
 #define Dimgray_color "#696969"
 #define Gold_color "#FFD700"
 #define Darkorage_color "#FF8C00"
+#define Black_black "#000000"
 #define COLOR_FIREBRICK 8
 #define COLOR_FORESTGREEN 9
 #define COLOR_DIMGRAY 10
 #define COLOR_GOLD 11
 #define COLOR_DARKORANGE 12
+#define BLACK_BLACK 13
 
 // char ROGUE[6][45] = {
 //     {"███████╗ ██████╗  ██████╗ ██╗   ██╗███████╗"},
@@ -62,22 +64,40 @@ char GAME[6][38] = {
 
 */
 
+// char ROGUE[6][45] = {
+//     {"#######| ######|  ######|  ##|  ##| ######|"},
+//     {"##|  ##| ##|  ##| ##|      ##|  ##| ##|    "},
+//     {"#######| ##|  ##| ##| ###| ##|  ##| #####| "},
+//     {"##|  ##| ##|  ##| ##|  ##| ##|  ##| ##|    "},
+//     {"##|  ##| ######|  ######|   #####|  ######|"},
+//     {"##|  ##| ######|   ####|     ###|   ######|"},
+// };
+
+// char GAME[6][38] = {
+//     {"######|  ######| ###|  ###| #######|"},
+//     {"##|      ##  ##| ####|####| ##|     "},
+//     {"##| ###| ######| ##|######| #####|  "},
+//     {"##|  ##| ##| ##| ##| ## ##| ##|     "},
+//     {"######|  ##| ##| ##|    ##| #######|"},
+//     {"######|  ##| ##| ##|    ##| #######|"},
+// };
+
 char ROGUE[6][45] = {
-    {"#######| ######|  ######|  ##|  ##| ######|"},
-    {"##|  ##| ##|  ##| ##|      ##|  ##| ##|    "},
-    {"#######| ##|  ##| ##| ###| ##|  ##| #####| "},
-    {"##|  ##| ##|  ##| ##|  ##| ##|  ##| ##|    "},
-    {"##|  ##| ######|  ######|   #####|  ######|"},
-    {"##|  ##| ######|   ####|     ###|   ######|"},
+    {" ____     _____   _______   _   _    _____ "},
+    {"|  _ \\   |  _  | |  ____|  | | | |  |  ___|"},
+    {"| |_| |  | | | | | | ___   | | | |  | |__  "},
+    {"|  _ /   | | | | | | |_ |  | | | |  |  __| "},
+    {"| | \\ \\  | |_| | | |__| |  | |_| |  | |___ "},
+    {"|_|  \\_\\ |_____| |______/  |_____|  |_____|"},
 };
 
 char GAME[6][38] = {
-    {"######|  ######| ###|  ###| #######|"},
-    {"##|      ##  ##| ####|####| ##|     "},
-    {"##| ###| ######| ##|######| #####|  "},
-    {"##|  ##| ##| ##| ##| ## ##| ##|     "},
-    {"######|  ##| ##| ##|    ##| #######|"},
-    {"######|  ##| ##| ##|    ##| #######|"},
+    {" _______  _____   _    _   _____  "},
+    {"|  ____| |  _  | | |  | | |  ___| "},
+    {"| | ___  | |_| | | \\  / | | |__   "},
+    {"| | |_ | |  _  | | |\\/| | |  __|  "},
+    {"| |__| | | | | | | |  | | | |___  "},
+    {"|______/ |_| |_| |_|  |_| |_____|  "},
 };
 
 
@@ -136,7 +156,12 @@ void clear_space() {
     init_pair(15, COLOR_RED, COLOR_BLUE);
     init_pair(16, COLOR_GREEN, COLOR_BLUE);
     init_pair(17, COLOR_DARKORANGE, COLOR_BLUE);
-    init_pair(18, COLOR_YELLOW, COLOR_BLUE);
+    init_pair(18, COLOR_GOLD, COLOR_BLUE);
+
+    hx(Black_black, &r, &g, &b);
+    init_color(BLACK_BLACK, r, g, b);
+    init_pair(19, BLACK_BLACK, COLOR_BLACK);
+    init_pair(20, COLOR_BLACK, COLOR_FORESTGREEN);
     /*
 #define FIREBRICK 8
 #define FORESTGREEN 9
@@ -207,7 +232,12 @@ void clear_space2() {
     init_pair(15, COLOR_RED, COLOR_BLUE);
     init_pair(16, COLOR_GREEN, COLOR_BLUE);
     init_pair(17, COLOR_DARKORANGE, COLOR_BLUE);
-    init_pair(18, COLOR_YELLOW, COLOR_BLUE);
+    init_pair(18, COLOR_GOLD, COLOR_BLUE);
+
+    hx(Black_black, &r, &g, &b);
+    init_color(BLACK_BLACK, r, g, b);
+    init_pair(19, BLACK_BLACK, COLOR_BLACK);
+    init_pair(20, COLOR_BLACK, COLOR_FORESTGREEN);
 }
 
 
