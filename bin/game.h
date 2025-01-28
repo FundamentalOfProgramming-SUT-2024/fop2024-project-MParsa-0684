@@ -58,7 +58,7 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
 
     (*game)->gun = (Gun **) calloc(5, sizeof(Gun *));
     (*game)->gun[0] = (Gun *) calloc(1, sizeof(Gun));
-    strcpy((*game)->gun[0][0].name,"Mace"), (*game)->gun[0][0].type = Mace, (*game)->gun[0][0].counter = 1, (*game)->gun[0][0].damage = 5;
+    strcpy((*game)->gun[0][0].name,"Mace"), (*game)->gun[0][0].type = Mace, (*game)->gun[0][0].counter = 1, (*game)->gun[0][0].damage = 5, (*game)->gun[0][0].distance = 1;
     (*game)->current_gun = (*game)->gun[0];
 
     (*game)->spell = (Spell ***) calloc(3, sizeof(Spell **));
@@ -314,21 +314,29 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                     case Dagger:
                         room->guns[i]->damage = 12;
                         room->guns[i]->counter = 10;
+                        strcpy(room->guns[i]->name, "Dagger");
+                        room->guns[i]->distance = 5;
                         //unicode
                         break;
                     case Magic_Wand:
                         room->guns[i]->damage = 15;
                         room->guns[i]->counter = 8;
+                        strcpy(room->guns[i]->name, "Magic_Wand");
+                        room->guns[i]->distance = 10;
                         //unicode
                         break;
                     case Normal_Arrow:
                         room->guns[i]->damage = 5;
                         room->guns[i]->counter = 20;
+                        strcpy(room->guns[i]->name, "Normal_Arrow");
+                        room->guns[i]->distance = 5;
                         //unicode
                         break;
                     case Sword:
                         room->guns[i]->damage = 10;
                         room->guns[i]->counter = 1;
+                        strcpy(room->guns[i]->name, "Sword");
+                        room->guns[i]->distance = 1;
                         //unicode
                         break;
                 }
@@ -684,10 +692,11 @@ void play_game(Game *game) {
     bool is_g = false;  
     bool is_f = false;
     bool is_moved = false;
+    int save_shot[2];
     int dir = -1;
     while(flag) {
         paint_floor(game, &game->floors[game->player_floor], game_window, time_passed);
-                
+
         is_moved = false;
         int c = getch();
         switch(c) {
@@ -1181,6 +1190,7 @@ void play_game(Game *game) {
             // for using gun
             case ' ':
                 // use bool power_up to double the damage
+                hit_enemy(game);
                 break;
 
             // for repeating gun usage again
@@ -1602,7 +1612,7 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed)
 
     attron(COLOR_PAIR(2) | A_BOLD);
     move(41, 0);
-    printw(" Game_Name: %s\tHealth: %d%%\tGun: %s, %d\tGold: %d\t\tMaster_Key: %d\tFloor: %d\tPress 'q' to Save & Quit the game!", game->name, game->Health, game->current_gun->name, game->current_gun->counter, game->total_gold, game->master_key_num, (game->player_floor + 1));
+    printw(" Game_Name: %s\tHealth: %d%%\tGun: %s,%d \tGold: %d\t\tMaster_Key: %d\tFloor: %d\tPress 'q' to Save & Quit the game!", game->name, game->Health, game->current_gun->name, game->current_gun->counter, game->total_gold, game->master_key_num, (game->player_floor + 1));
     attroff(COLOR_PAIR(2) | A_BOLD);
         
     

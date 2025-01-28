@@ -167,6 +167,7 @@ typedef struct Gun {
     wchar_t unicode;
     int damage;
     int counter;
+    int distance;
 
 } Gun;
 
@@ -275,6 +276,7 @@ void guns_menu(Game *game);
 void spells_menu(Game *game, int time_passed);
 void password_generator(Game *game, Locked_Door *locked_door, int dir);
 void game_lost(Game *game);
+void hit_enemy(Game *game);
 
 void action_game(Game *game, int dir, int time_passed) {
     Room *temp_room;
@@ -985,6 +987,157 @@ void game_lost(Game *game) {
 
     wattroff(lost, COLOR_PAIR(8) | A_BOLD);
     delwin(lost);
+}
+
+void hit_enemy(Game *game) {
+    if(game->player_room == -1) {
+        move(0, 1);
+        attron(COLOR_PAIR(3) | A_BOLD);
+        addstr("You should use your GUN just in Rooms! Press any key to continue...");
+
+        int c = getch();
+        for(int i = 0; i < 146; i++) {
+            move(0, i);
+            addch(' ');
+        }    
+
+        attroff(COLOR_PAIR(3) | A_BOLD);
+        return;  
+    }
+    bool flag = false;
+    if(game->current_gun->type == Mace || game->current_gun->type == Sword) {
+        for(int i = 0; i < 8; i++) {
+            int y = game->player_location.y + directions[i][1], x = game->player_location.x + directions[i][0];
+            if(y >= 0 && x >= 0 && y < 40 && x < 146 && 
+            (game->floors[game->player_floor].map[y][x] == 'd' || 
+            game->floors[game->player_floor].map[y][x] == 'f' || 
+            game->floors[game->player_floor].map[y][x] == 'g' || 
+            game->floors[game->player_floor].map[y][x] == 's' || 
+            game->floors[game->player_floor].map[y][x] == 'u')) {
+                for(int ii = 0; ii < game->floors[game->player_floor].Rooms[game->player_room].enemy_num; ii++) {
+                    if(game->floors[game->player_floor].Rooms[game->player_room].enemies[ii] != NULL && game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->location.y == y && 
+                    game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->location.x == x) {
+                        if(game->current_gun->damage >= game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->health) {
+                                game->floors[game->player_floor].map[y][x] = '.';
+                                game->floors[game->player_floor].Rooms[game->player_room].enemies[ii] = NULL;
+                        }
+                        else 
+                            game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->health -= game->current_gun->damage;
+                        flag = true;
+                    }
+                }
+            }
+        }
+    }
+    else {
+        move(0, 1);
+        attron(COLOR_PAIR(3) | A_BOLD);
+        addstr("Please select a Direction to shoot the gun[j/k/h/l/y/u/b/n]...");
+
+        int c = getch();
+        for(int i = 0; i < 146; i++) {
+            move(0, i);
+            addch(' ');
+        }    
+
+        attroff(COLOR_PAIR(3) | A_BOLD);        
+
+        int dir = -1;
+        switch (c)
+        {
+        case 'j':
+            dir = 0;
+            break;
+        
+        case 'k':
+            dir = 4;
+            break;
+        
+        case 'l':
+            dir = 2;
+            break;
+        
+        case 'h':
+            dir = 6;
+            break;
+
+        case 'y':
+            dir = 7;
+            break;
+        
+        case 'u':
+            dir = 1;
+            break;
+        
+        case 'b':
+            dir = 5;
+            break;
+        
+        case 'n':
+            dir = 3;
+            break;
+        
+        default:
+            break;
+        }
+
+        if(dir == -1) {
+            move(0, 1);
+            attron(COLOR_PAIR(3) | A_BOLD);
+            addstr("You've chosen wrong key! Press any key to continue...");
+
+            getch();
+            for(int i = 0; i < 146; i++) {
+                move(0, i);
+                addch(' ');
+            }    
+
+            attroff(COLOR_PAIR(3) | A_BOLD); 
+            return; 
+        }
+        else {
+            int y = game->player_location.y, x = game->player_location.x;
+            for(int iii = 0; iii < game->current_gun->distance; iii++) {
+                if(game->floors[game->player_floor].map[y][x] != '_' && 
+                    game->floors[game->player_floor].map[y][x] != '|' && 
+                    game->floors[game->player_floor].map[y][x] != ' ' &&
+                    game->floors[game->player_floor].map[y][x] != '@' && 
+                    game->floors[game->player_floor].map[y][x] != '+' && 
+                    game->floors[game->player_floor].map[y][x] != '&') {
+                        if(game->floors[game->player_floor].map[y][x] == 'd' ||
+                        game->floors[game->player_floor].map[y][x] == 'f' || 
+                        game->floors[game->player_floor].map[y][x] == 'g' || 
+                        game->floors[game->player_floor].map[y][x] == 's' || 
+                        game->floors[game->player_floor].map[y][x] == 'u') {
+                            // should be checked!!!
+                            for(int ii = 0; ii < game->floors[game->player_floor].Rooms[game->player_room].enemy_num; ii++) {
+                                if(game->floors[game->player_floor].Rooms[game->player_room].enemies[ii] != NULL && game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->location.y == y && 
+                                game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->location.x == x) {
+                                    if(game->current_gun->damage >= game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->health) {
+                                            game->floors[game->player_floor].map[y][x] = '.';
+                                            game->floors[game->player_floor].Rooms[game->player_room].enemies[ii] = NULL;
+                                    }
+                                    else 
+                                        game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->health -= game->current_gun->damage;
+                                    game->current_gun->counter--;
+                                    flag = true;
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        else {
+                            y += directions[dir][1];
+                            x += directions[dir][0];
+                        }
+                }
+                else {
+                    // put gun on floor
+                }
+            } 
+        }
+
+    }
 }
 
 #endif
