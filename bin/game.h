@@ -56,17 +56,16 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
     (*game)->foods = (Food ***) calloc(4, sizeof(Food **));
     (*game)->food_num = (int *) calloc(4, sizeof(int));
 
-    (*game)->gun = (Gun ***) calloc(5, sizeof(Gun **));
-    (*game)->gun_num = (int *) calloc(5, sizeof(int));
-
-    (*game)->gun[0] = (Gun **) calloc(1, sizeof(Gun *));
-    (*game)->gun[0][0] = (Gun *) calloc(1, sizeof(Gun));
-    strcpy((*game)->gun[0][0][0].name,"Mace"), (*game)->gun[0][0][0].type = Mace, (*game)->gun[0][0][0].counter = 1, (*game)->gun[0][0][0].damage = 5;
-    (*game)->gun_num[0]++;
-    (*game)->current_gun = (*game)->gun[0][0];
+    (*game)->gun = (Gun **) calloc(5, sizeof(Gun *));
+    (*game)->gun[0] = (Gun *) calloc(1, sizeof(Gun));
+    strcpy((*game)->gun[0][0].name,"Mace"), (*game)->gun[0][0].type = Mace, (*game)->gun[0][0].counter = 1, (*game)->gun[0][0].damage = 5;
+    (*game)->current_gun = (*game)->gun[0];
 
     (*game)->spell = (Spell ***) calloc(3, sizeof(Spell **));
     (*game)->spell_num = (int *) calloc(3, sizeof(int));
+
+    (*game)->master_key = NULL;
+    (*game)->master_key_num = 0;
 
     (*game)->music = (Music *) calloc(1, sizeof(Music));
     strcpy((*game)->music->music_path, music->music_path);
@@ -1176,7 +1175,7 @@ void play_game(Game *game) {
 
             // menu for spells to use
             case 'p':
-                spells_menu(game);
+                spells_menu(game, time_passed);
                 break;
 
             // for using gun
@@ -1197,12 +1196,281 @@ void play_game(Game *game) {
 
         //! actions after moving 
 
-        if(is_moved == true && is_take_element == true) {
-            action_game(game, dir, time_passed);
+        if(is_moved == true) {
+            if(is_take_element == true)
+                action_game(game, dir, time_passed);
+            else 
+                is_take_element = true;
+
+            Room *temp_room;
+            int ii = 1;
+            switch(game->floors[game->player_floor].map[game->player_location.y][game->player_location.x]) {
+                // roads
+                case '#':
+                    // expand road for player
+                    while(ii < 6) {
+                        int y = game->player_location.y + (ii * directions[dir][1]), x = game->player_location.x + (ii * directions[dir][0]);
+                        if(is_in_map(y, x) && game->floors[game->player_floor].map[y][x] == '#')
+                            game->floors[game->player_floor].visit[y][x] = true;
+                        else 
+                            ii = 1000;
+
+                        ii++;
+                    }
+
+                    // set player_room in road to -1
+                    if(game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '+' || game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '@' || game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '*')
+                        game->player_room = -1;
+                    break;
+
+                // Normal doors
+                case '+':
+                    // locate new room for player_room
+                    if(game->player_room == -1) {
+                        for(int iii = 0; iii < 6 && game->player_room == -1; iii++) {
+                            for(int jj = 0; jj < game->floors[game->player_floor].Rooms[iii].normal_doors_num && game->player_room == -1; jj++) {
+                                if(game->player_location.y == game->floors[game->player_floor].Rooms[iii].normal_doors[jj].location.y && game->player_location.x == game->floors[game->player_floor].Rooms[iii].normal_doors[jj].location.x) {
+                                    game->player_room = iii;
+                                }
+                            }
+                        }
+                    }
+
+                    // show new room
+                    temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
+                    for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
+                        for(int jj = temp_room->start.x; jj < temp_room->start.x + temp_room->size.x; jj++) {
+                            game->floors[game->player_floor].visit[iii][jj] = true;
+                        }
+                    }
+                    break;
+
+                // Secret door
+                case '*':
+                    // locate new room for player_room
+                    if(game->player_room == -1) {
+                        for(int iii = 0; iii < 6 && game->player_room == -1; iii++) {
+                            for(int jj = 0; jj < game->floors[game->player_floor].Rooms[iii].secret_doors_num && game->player_room == -1; jj++) {
+                                if(game->player_location.y == game->floors[game->player_floor].Rooms[iii].secret_doors[jj].location.y && game->player_location.x == game->floors[game->player_floor].Rooms[iii].secret_doors[jj].location.x) {
+                                    game->player_room = iii;
+                                }
+                            }
+                        }
+                    }
+
+                    // show new room
+                    temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
+                    for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
+                        for(int jj = temp_room->start.x; jj < temp_room->start.x + temp_room->size.x; jj++) {
+                            game->floors[game->player_floor].visit[iii][jj] = true;
+                        }
+                    }
+                    break;
+                
+                // Locked door
+                case '@':
+                    // locate new room for player_room
+                    if(game->player_room == -1) {
+                        for(int iii = 0; iii < 6 && game->player_room == -1; iii++) {
+                            for(int jj = 0; jj < 1 && game->player_room == -1; jj++) {
+                                if(game->floors[game->player_floor].Rooms[iii].locked_door != NULL && game->player_location.y == game->floors[game->player_floor].Rooms[iii].locked_door->location.y && game->player_location.x == game->floors[game->player_floor].Rooms[iii].locked_door->location.x) {
+                                    game->player_room = iii;
+                                }
+                            }
+                        }
+
+                        // show new room
+                        temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
+                        for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
+                            for(int jj = temp_room->start.x; jj < temp_room->start.x + temp_room->size.x; jj++) {
+                                game->floors[game->player_floor].visit[iii][jj] = true;
+                            }
+                        }
+                        break;
+                    }
+
+                    if(game->floors[game->player_floor].Rooms[game->player_room].locked_door->is_visited == true)
+                        break;
+
+                    echo();
+                    curs_set(TRUE);
+                    game->player_location.y -= directions[dir][1];
+                    game->player_location.x -= directions[dir][0];
+                    if(game->floors[game->player_floor].Rooms[game->player_room].locked_door->password_turn < 3) {
+                        move(0, 1);
+                        attron(COLOR_PAIR(2) | A_BOLD);
+                        char pass[100];
+                        addstr("Please enter your Password: ");
+                        attroff(A_BOLD);
+                        getstr(pass);
+                        int password = strtol(pass, NULL, 10);
+
+                        for(int i = 0; i < 146; i++) {
+                            move(0, i);
+                            addch(' ');
+                        }  
+                        attroff(COLOR_PAIR(2));
+                        move(0, 1);
+
+                        game->floors[game->player_floor].Rooms[game->player_room].locked_door->password_turn++;
+                        if(password == game->floors[game->player_floor].Rooms[game->player_room].locked_door->password) {
+                            game->floors[game->player_floor].Rooms[game->player_room].locked_door->is_visited = true;
+                            attron(COLOR_PAIR(16) | A_BOLD);
+                            addstr("Congratulations! Your Password was correct! The door is unlocked! Press any key to continue...");
+                            attroff(COLOR_PAIR(16) | A_BOLD);
+                        }
+                        else {
+                            switch(game->floors[game->player_floor].Rooms[game->player_room].locked_door->password_turn) {
+                                case 1:
+                                    attron(COLOR_PAIR(18) | A_BOLD);
+                                    addstr("Oops... Your Password is incorrect! You have 2 shots left! Press any key to continue...");
+                                    attroff(COLOR_PAIR(18) | A_BOLD);
+                                    break;
+
+                                case 2:
+                                    attron(COLOR_PAIR(17) | A_BOLD);
+                                    addstr("Oops... Your Password is incorrect! You have 1 shots left! Press any key to continue...");
+                                    attroff(COLOR_PAIR(17) | A_BOLD);
+                                    break;
+
+                                case 3:
+                                    attron(COLOR_PAIR(3) | A_BOLD);
+                                    addstr("Oops... Your Password is incorrect! You have no shots left! The door is locked forever! Press any key to continue...");
+                                    attroff(COLOR_PAIR(3) | A_BOLD);
+                                    break;
+                            }
+                        }
+
+                        getch();
+
+                        attron(COLOR_PAIR(2) | A_BOLD);
+                        for(int i = 0; i < 146; i++) {
+                            move(0, i);
+                            addch(' ');
+                        }  
+                        attroff(COLOR_PAIR(2) | A_BOLD);
+                        noecho();
+                        curs_set(FALSE);
+
+                    }
+                    else {
+                        if(game->master_key_num > 0) {
+                            move(0, 1);
+                            attron(COLOR_PAIR(3) | A_BOLD);
+                            addstr("Do you want to use Master_Key to unlock the door?[y/n] ");
+                            echo();
+                            curs_set(TRUE);
+                            int c = getch();
+                            for(int i = 0; i < 146; i++) {
+                                move(0, i);
+                                addch(' ');
+                            }  
+                            attroff(COLOR_PAIR(3) | A_BOLD);
+                            
+                            move(0, 1);
+                            if(c == 'y') {
+                                attron(COLOR_PAIR(16) | A_BOLD);
+                                addstr("The door is get unlocked! Press any key to continue...");
+                                game->floors[game->player_floor].Rooms[game->player_room].locked_door->is_visited = true;
+                                game->master_key_num--;
+                                attroff(COLOR_PAIR(16) | A_BOLD);
+                            }
+                            else {
+                                attron(COLOR_PAIR(3) | A_BOLD);
+                                addstr("OK! The door is locked! Press any key to continue...");
+                                attroff(COLOR_PAIR(3) | A_BOLD);                            
+                            }
+                            getch();
+                            
+                            noecho();
+                            curs_set(FALSE);
+                        }
+                        else {
+                            move(0, 1);
+                            attron(COLOR_PAIR(3) | A_BOLD);
+                            addstr("You have tried your 3 shots to unlock the door, Press any key to continue...");
+
+                            getch();
+
+                            for(int i = 0; i < 146; i++) {
+                                move(0, i);
+                                addch(' ');
+                            }    
+                            attroff(COLOR_PAIR(3) | A_BOLD);
+                        }
+                    }
+                    break;
+
+                // Password generator
+                case '&':
+                    game->player_location.y -= directions[dir][1];
+                    game->player_location.x -= directions[dir][0];
+                    
+                    if(game->floors[game->player_floor].Rooms[game->player_room].locked_door->is_visited == true)
+                        break;
+        
+                    if(game->floors[game->player_floor].Rooms[game->player_room].locked_door->password_turn < 3) {
+                        password_generator(game, game->floors[game->player_floor].Rooms[game->player_room].locked_door, dir);
+                    }
+                    else {
+                        move(0, 1);
+                        attron(COLOR_PAIR(3) | A_BOLD);
+                        addstr("You have tried your 3 shots to unlock the door, Press any key to continue...");
+
+                        getch();
+
+                        for(int i = 0; i < 146; i++) {
+                            move(0, i);
+                            addch(' ');
+                        }    
+                        attroff(COLOR_PAIR(3) | A_BOLD);
+                    }
+                    break;
+
+                case '{':
+                    game->player_location.x = game->floors[game->player_floor].Rooms[5].start.x + (game->floors[game->player_floor].Rooms[5].size.x / 2);
+                    game->player_location.y = game->floors[game->player_floor].Rooms[5].start.y + (game->floors[game->player_floor].Rooms[5].size.y / 2);
+                    
+                    // show new room
+                    temp_room = &game->floors[game->player_floor].Rooms[5]; 
+                    for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
+                        for(int jj = temp_room->start.x; jj < temp_room->start.x + temp_room->size.x; jj++) {
+                            game->floors[game->player_floor].visit[iii][jj] = true;
+                        }
+                    }
+                    game->player_room = 5;
+                    break;
+                
+                // Traps
+                case '^':
+
+                    break;
+                
+                // Master_Key
+                case '!':
+                    game->master_key_num++;
+                    game->master_key = (Master_Key **) realloc(game->master_key, (game->master_key_num) * sizeof(Master_Key *));
+                    game->master_key[game->master_key_num - 1] = game->floors[game->player_floor].Rooms[game->player_room].master_key;
+                    game->floors[game->player_floor].map[game->player_location.y][game->player_location.x] = '.';
+                    game->floors[game->player_floor].Rooms[game->player_room].master_key = NULL;
+                    move(0, 1);
+                    attron(COLOR_PAIR(18) | A_BOLD);
+                    addstr("You've got a Master_Key, Press any key to continue...");
+
+                    int c = getch();
+                    for(int i = 0; i < 146; i++) {
+                        move(0, i);
+                        addch(' ');
+                    }    
+
+                    attroff(COLOR_PAIR(18) | A_BOLD);
+                    break;
+                
+                default:
+                    break;
+            }
         } 
-        else if(is_moved == true){
-            is_take_element = true;
-        }
+
         time_passed++;
         
     }
@@ -1214,6 +1482,7 @@ void play_game(Game *game) {
     delwin(game_window);
 }
 
+// paint_floor_lapse
 void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed) {
     noecho();
     curs_set(FALSE);
@@ -1289,7 +1558,7 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed)
                 mvwaddch(game_window, i, j, index);
                 wrefresh(game_window);
                 wattroff(game_window, COLOR_PAIR(color_num));
-                if(index == 'd' || index == 'm' || index == 'g' || index == 's' || index == 'u')
+                if(index == 'd' || index == 'f' || index == 'g' || index == 's' || index == 'u')
                     wattroff(game_window, A_BOLD);
             }
         }
@@ -1329,7 +1598,7 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed)
 
     attron(COLOR_PAIR(2) | A_BOLD);
     move(41, 0);
-    printw(" \tGame_Name: %s\tHealth: %d%%\tGun: %s\tGold: %d\t\tFloor: %d\tPress 'q' to Save & Quit the game!", game->name, game->Health, game->current_gun->name, game->total_gold, (game->player_floor + 1));
+    printw(" Game_Name: %s\tHealth: %d%%\tGun: %s, %d\tGold: %d\t\tMaster_Key: %d\tFloor: %d\tPress 'q' to Save & Quit the game!", game->name, game->Health, game->current_gun->name, game->current_gun->counter, game->total_gold, game->master_key_num, (game->player_floor + 1));
     attroff(COLOR_PAIR(2) | A_BOLD);
         
     

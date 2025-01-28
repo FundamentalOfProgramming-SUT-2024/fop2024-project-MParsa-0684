@@ -162,6 +162,8 @@ void clear_space() {
     init_color(BLACK_BLACK, r, g, b);
     init_pair(19, BLACK_BLACK, COLOR_BLACK);
     init_pair(20, COLOR_BLACK, COLOR_FORESTGREEN);
+    init_pair(21, COLOR_BLACK, COLOR_DARKORANGE);
+    init_pair(22, COLOR_BLACK, BLACK_BLACK);
     /*
 #define FIREBRICK 8
 #define FORESTGREEN 9
