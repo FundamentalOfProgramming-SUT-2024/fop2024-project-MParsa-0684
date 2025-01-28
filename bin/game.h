@@ -687,7 +687,7 @@ void play_game(Game *game) {
     int dir = -1;
     while(flag) {
         paint_floor(game, &game->floors[game->player_floor], game_window, time_passed);
-        
+                
         is_moved = false;
         int c = getch();
         switch(c) {
@@ -1471,6 +1471,10 @@ void play_game(Game *game) {
             }
         } 
 
+        if(game->Health <= 0) {
+            game_lost(game);
+            break;
+        }
         time_passed++;
         
     }

@@ -274,6 +274,7 @@ void foods_menu(Game *game, int time_passed);
 void guns_menu(Game *game);
 void spells_menu(Game *game, int time_passed);
 void password_generator(Game *game, Locked_Door *locked_door, int dir);
+void game_lost(Game *game);
 
 void action_game(Game *game, int dir, int time_passed) {
     Room *temp_room;
@@ -959,4 +960,33 @@ void password_generator(Game *game, Locked_Door *locked_door, int dir) {
     delwin(alert);
 }
 
+void game_lost(Game *game) {
+    WINDOW *lost = newwin(40, 146, 1, 1);
+    wattron(lost, COLOR_PAIR(8) | A_BOLD);
+    wclear(lost);
+    for(int ii = 0; ii < 3; ii++) {
+        for(int i = 0; i < 6; i++){
+            mvwaddstr(lost, 7 + i, 55 + (ii * 14), SAD_FACE[i]);
+            mvwaddstr(lost, 23 + i, 55 + (ii * 14), SAD_FACE[i]);
+        }
+    }
+
+
+    for(int i = 14; i < 20; i++) {
+        mvwaddstr(lost, i, 5, ROGUE[i - 14]);
+        mvwaddstr(lost, i, 100, GAME[i - 14]);
+    }
+    mvwaddstr(lost, 17, 55, "Unfortunatelly, You lost the game!");
+    mvwaddstr(lost, 18, 55, "Press any key to return to Player Menu...");    
+    wrefresh(lost);
+
+    getch();
+    game = NULL;
+
+    wattroff(lost, COLOR_PAIR(8) | A_BOLD);
+    delwin(lost);
+}
+
 #endif
+
+
