@@ -285,6 +285,7 @@ void action_game(Game *game, int dir, int time_passed) {
     Gold_Type gt;
     Gun_Type ut;
     Spell_Type st;
+    int ctr = 0;
             game->floors[game->player_floor].visit[game->player_location.y][game->player_location.x] = true;
             switch(game->floors[game->player_floor].map[game->player_location.y][game->player_location.x]) {
                 // Taking food
@@ -384,6 +385,7 @@ void action_game(Game *game, int dir, int time_passed) {
                                     game->gun[game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->type - Mace]->counter += game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->counter;
                                 }
                             }
+                            ctr = game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->counter;
                             game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->location.y][game->floors[game->player_floor].Rooms[game->player_room].guns[ii]->location.x] = '.';
                             game->floors[game->player_floor].Rooms[game->player_room].guns[ii] = NULL;
                         }
@@ -393,20 +395,21 @@ void action_game(Game *game, int dir, int time_passed) {
                     attron(COLOR_PAIR(3) | A_BOLD);
                     str = (char *) malloc(1000 * sizeof(char));
                     strcpy(str, "You've taken ");
+                    sprintf(str + strlen(str), "%d ", ctr);
                     switch(ut) {
                         case Mace:
                             break;
                         case Dagger:
-                            strcat(str, "10 GUNs with type {Dagger}");
+                            strcat(str, "GUN(s) with type {Dagger}");
                             break;
                         case Magic_Wand:
-                            strcat(str, "8 GUNs with type {Magic_Wand}");
+                            strcat(str, "GUN(s) with type {Magic_Wand}");
                             break;
                         case Normal_Arrow:
-                            strcat(str, "20 GUNs with type {Normal_Arrow}");
+                            strcat(str, "GUN(s) with type {Normal_Arrow}");
                             break;
                         case Sword:
-                            strcat(str, "a GUN with type {Sword}");
+                            strcat(str, "GUN with type {Sword}");
                             break;
 
                     }
@@ -993,7 +996,7 @@ void hit_enemy(Game *game) {
     if(game->player_room == -1) {
         move(0, 1);
         attron(COLOR_PAIR(3) | A_BOLD);
-        addstr("You should use your GUN just in Rooms! Press any key to continue...");
+        addstr("You can use your GUN just in Rooms! Press any key to continue...");
 
         int c = getch();
         for(int i = 0; i < 146; i++) {
@@ -1097,21 +1100,22 @@ void hit_enemy(Game *game) {
         }
         else {
             int y = game->player_location.y, x = game->player_location.x;
-            for(int iii = 0; iii < game->current_gun->distance; iii++) {
-                if(game->floors[game->player_floor].map[y][x] != '_' && 
-                    game->floors[game->player_floor].map[y][x] != '|' && 
-                    game->floors[game->player_floor].map[y][x] != ' ' &&
-                    game->floors[game->player_floor].map[y][x] != '@' && 
-                    game->floors[game->player_floor].map[y][x] != '+' && 
-                    game->floors[game->player_floor].map[y][x] != '&') {
+            for(int iii = 0; iii <= game->current_gun->distance; iii++) {
+                if(game->floors[game->player_floor].map[y][x] == '.' ||
+                    game->floors[game->player_floor].map[y][x] == 'd' ||
+                    game->floors[game->player_floor].map[y][x] == 'f' || 
+                    game->floors[game->player_floor].map[y][x] == 'g' || 
+                    game->floors[game->player_floor].map[y][x] == 's' || 
+                    game->floors[game->player_floor].map[y][x] == 'u') {
                         if(game->floors[game->player_floor].map[y][x] == 'd' ||
                         game->floors[game->player_floor].map[y][x] == 'f' || 
                         game->floors[game->player_floor].map[y][x] == 'g' || 
                         game->floors[game->player_floor].map[y][x] == 's' || 
                         game->floors[game->player_floor].map[y][x] == 'u') {
-                            // should be checked!!!
+                            // checked
                             for(int ii = 0; ii < game->floors[game->player_floor].Rooms[game->player_room].enemy_num; ii++) {
-                                if(game->floors[game->player_floor].Rooms[game->player_room].enemies[ii] != NULL && game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->location.y == y && 
+                                if(game->floors[game->player_floor].Rooms[game->player_room].enemies[ii] != NULL && 
+                                game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->location.y == y && 
                                 game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->location.x == x) {
                                     if(game->current_gun->damage >= game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->health) {
                                             game->floors[game->player_floor].map[y][x] = '.';
@@ -1119,6 +1123,7 @@ void hit_enemy(Game *game) {
                                     }
                                     else 
                                         game->floors[game->player_floor].Rooms[game->player_room].enemies[ii]->health -= game->current_gun->damage;
+                                    
                                     game->current_gun->counter--;
                                     flag = true;
                                     break;
@@ -1132,11 +1137,75 @@ void hit_enemy(Game *game) {
                         }
                 }
                 else {
-                    // put gun on floor
+                    if(iii > 0)
+                        y -= directions[dir][1];
+                        x -= directions[dir][0];
+                
+                    Room *room = &game->floors[game->player_floor].Rooms[game->player_room];
+                    room->gun_num++;
+                    room->guns = (Gun **) realloc(room->guns, room->gun_num * sizeof(Gun *));
+                    room->guns[room->gun_num - 1] = (Gun *) malloc(sizeof(Gun));
+                    room->guns[room->gun_num - 1]->type = game->current_gun->type;
+                    room->guns[room->gun_num - 1]->location.y = y;
+                    room->guns[room->gun_num - 1]->location.x = x;
+                    game->floors[game->player_floor].map[room->guns[room->gun_num - 1]->location.y][room->guns[room->gun_num - 1]->location.x] = 'U';
+                    switch(room->guns[room->gun_num - 1]->type) {
+                        case Mace:
+                            break;
+                        case Dagger:
+                            room->guns[room->gun_num - 1]->damage = 12;
+                            room->guns[room->gun_num - 1]->counter = 1;
+                            strcpy(room->guns[room->gun_num - 1]->name, "Dagger");
+                            room->guns[room->gun_num - 1]->distance = 5;
+                            //unicode
+                            break;
+                        case Magic_Wand:
+                            room->guns[room->gun_num - 1]->damage = 15;
+                            room->guns[room->gun_num - 1]->counter = 1;
+                            strcpy(room->guns[room->gun_num - 1]->name, "Magic_Wand");
+                            room->guns[room->gun_num - 1]->distance = 10;
+                            //unicode
+                            break;
+                        case Normal_Arrow:
+                            room->guns[room->gun_num - 1]->damage = 5;
+                            room->guns[room->gun_num - 1]->counter = 1;
+                            strcpy(room->guns[room->gun_num - 1]->name, "Normal_Arrow");
+                            room->guns[room->gun_num - 1]->distance = 5;
+                            //unicode
+                            break;
+                        case Sword:
+                            room->guns[room->gun_num - 1]->damage = 10;
+                            room->guns[room->gun_num - 1]->counter = 1;
+                            strcpy(room->guns[room->gun_num - 1]->name, "Sword");
+                            room->guns[room->gun_num - 1]->distance = 1;
+                            //unicode
+                            break;
+                    }
+                    game->current_gun->counter--;
+                    break;
                 }
             } 
         }
+    }
+    
+    if(flag == true) {
+        move(0, 1);
+        attron(COLOR_PAIR(3) | A_BOLD);
+        addstr("You've hit the Enemy with your GUN, Press any key to continue...");
+        getch();
+        for(int i = 0; i < 146; i++) {
+            move(0, i);
+            addch(' ');
+        }    
+        attroff(COLOR_PAIR(3) | A_BOLD); 
+    }
 
+    if(game->current_gun->counter == 0) {
+        game->current_gun = game->gun[0];
+        for(int i = 0; i < 5; i++) {
+            if(game->gun[i] != NULL && game->gun[i]->counter == 0)
+                game->gun[i] = NULL;
+        }
     }
 }
 
