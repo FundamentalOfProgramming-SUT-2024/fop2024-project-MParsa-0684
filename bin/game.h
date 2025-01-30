@@ -312,7 +312,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                 floor->map[room->guns[i]->location.y][room->guns[i]->location.x] = 'U';
                 switch(room->guns[i]->type) {
                     case Mace:
-                        room->guns[i]->unicode = 0x0001FA93;
+                        room->guns[i]->unicode = 0x0001F531;
                         break;
                     case Dagger:
                         room->guns[i]->damage = 12;
@@ -326,7 +326,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                         room->guns[i]->counter = 8;
                         strcpy(room->guns[i]->name, "Magic_Wand");
                         room->guns[i]->distance = 10;
-                        room->guns[i]->unicode = 0x0001FA84;
+                        room->guns[i]->unicode = 0x0001F31F;
                         break;
                     case Normal_Arrow:
                         room->guns[i]->damage = 5;
@@ -1532,7 +1532,7 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed,
         game->time_power = -1;
     }
 
-    // Enemies Movement
+    // Enemy Movement
     if(game->player_room != -1) {
         for(int i = 0; i < game->floors[game->player_floor].Rooms[game->player_room].enemy_num; i++) {
             if(game->floors[game->player_floor].Rooms[game->player_room].enemies[i] != NULL) {
@@ -1545,16 +1545,33 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed,
                 else if(game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->following > 0) {
                     game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y][game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x] = '.';
                     if(abs(dy) > 1) {
-                        if(dy > 1) 
-                            game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y++;
+                        if(dy > 1) {
+                            while(true) {
+                                game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y++;
+                                if(game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y][game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x] == '.')
+                                    break;
+                            }
+                        }
                         else    
-                            game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y--;
+                            while(true) {
+                                game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y--;
+                                if(game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y][game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x] == '.')
+                                    break;
+                            }
                     }
                     else {
                         if(dx > 1)
-                            game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x++;
+                            while(true) {
+                                game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x++;
+                                if(game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y][game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x] == '.')
+                                    break;
+                            }
                         else
-                            game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x--;
+                            while(true) {
+                                game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x--;
+                                if(game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y][game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x] == '.')
+                                    break;
+                            }
                     }
                     game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y][game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x] = game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->chr;
                     game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->following--;

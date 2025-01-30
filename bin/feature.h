@@ -668,10 +668,11 @@ void search_map(Game *game) {
 void foods_menu(Game *game, int time_passed) {
     WINDOW *food_menu = newwin(40, 146, 1, 1);
     char str[3][100] = {
-        "    Ordinary\t\tNo\t\t\tNo\t\t\tYes\t\t",
-        "    Excellent\t\tYes\t\t\tNo\t\t\tYes\t\t",
-        "    Magical\t\tNo\t\t\tYes\t\t\tYes\t\t"
+        "  Ordinary\t\tNo\t\t\tNo\t\t\tYes\t\t",
+        "  Excellent\t\tYes\t\t\tNo\t\t\tYes\t\t",
+        "  Magical\t\tNo\t\t\tYes\t\t\tYes\t\t"
     };
+    wchar_t wt[3] = {0x0001F34E, 0x0001F370, 0x0001F347};
     for(int i = 0; i < 3; i++) {
         sprintf(str[i] + strlen(str[i]), "%d\t", game->food_num[i]);
     }
@@ -686,11 +687,15 @@ void foods_menu(Game *game, int time_passed) {
         mvwaddstr(food_menu, 15, 25, "------------------------------------------------------------------------------------------------");
         wattron(food_menu, A_BOLD);
 
-        for(int i = 0; i < 3; i++) 
-        mvwaddstr(food_menu, 16 + i, 25, str[i]);
+        for(int i = 0; i < 3; i++) {
+            mvwprintw(food_menu, 16 + i, 25, "%lc", wt[i]);
+            mvwaddstr(food_menu, 16 + i, 27, str[i]);
+        }
+
         wattroff(food_menu, COLOR_PAIR(9));
         wattron(food_menu, COLOR_PAIR(20));
-        mvwaddstr(food_menu, 16 + location, 25, str[location]);
+        mvwprintw(food_menu, 16 + location, 25, "%lc", wt[location]);
+        mvwaddstr(food_menu, 16 + location, 27, str[location]);
         wattroff(food_menu, COLOR_PAIR(20));
         wrefresh(food_menu);
 
@@ -785,12 +790,20 @@ void foods_menu(Game *game, int time_passed) {
 void guns_menu(Game *game) {
     WINDOW *gun_menu = newwin(40, 146, 1, 1);
     char str[5][100] = {
-        "    Mace\t\t1\t\t\t5\t\t",
-        "    Dagger\t\t5\t\t\t12\t\t",
-        "    Magic_Wand\t10\t\t\t15\t\t",
-        "    Normal_Arrow\t5\t\t\t5\t\t",
-        "    Sword\t\t1\t\t\t10\t\t"
+        "  Mace\t\t1\t\t\t5\t\t",
+        "  Dagger\t\t5\t\t\t12\t\t",
+        "  Magic_Wand\t10\t\t\t15\t\t",
+        "  Normal_Arrow\t5\t\t\t5\t\t",
+        "  Sword\t\t1\t\t\t10\t\t"
     };
+    wchar_t wt[5] = {
+        0x0001F531,
+        0x0001F528,
+        0x0001F4DC,
+        0x0001F3F9,
+        0x0001F5E1
+    };
+
     char str2[5][100] = {
         " Close Range ",
         "             ",
@@ -799,7 +812,13 @@ void guns_menu(Game *game) {
         "             "
     };
 
-    int arr[5] = {16,17,19,20,21};
+    int arr[5][2] = {
+        {16, 0},
+        {17, 4},
+        {19, 1},
+        {20, 2},
+        {21, 3}
+    };
     
 
     for(int i = 0; i < 5; i++) {
@@ -822,15 +841,17 @@ void guns_menu(Game *game) {
 
         for(int i = 0; i < 5; i++) {
             wattron(gun_menu, COLOR_PAIR(22) | A_BOLD);
-            mvwaddstr(gun_menu, arr[i], 20, str2[i]);
+            mvwaddstr(gun_menu, arr[i][0], 20, str2[i]);
             wattroff(gun_menu, COLOR_PAIR(22) | A_BOLD);
+            mvwprintw(gun_menu, arr[i][0], 34, "%lc", wt[arr[i][1]]);
             wattron(gun_menu, COLOR_PAIR(19));
-            mvwaddstr(gun_menu, arr[i], 34, str[i]);
+            mvwaddstr(gun_menu, arr[i][0], 36, str[arr[i][1]]);
         }
         
         wattroff(gun_menu, COLOR_PAIR(19));
         wattron(gun_menu, COLOR_PAIR(22));
-        mvwaddstr(gun_menu, arr[location], 34, str[location]);
+        mvwprintw(gun_menu, arr[location][0], 34, "%lc", wt[arr[location][1]]);
+        mvwaddstr(gun_menu, arr[location][0], 36, str[arr[location][1]]);
         wattroff(gun_menu, COLOR_PAIR(22));
         wrefresh(gun_menu);
 
@@ -854,14 +875,14 @@ void guns_menu(Game *game) {
     }
 
     char *mas = (char *) malloc(200 * sizeof(char));
-    if(game->gun[location] == NULL) {
+    if(game->gun[arr[location][1]] == NULL) {
         strcpy(mas, "You have no GUN with this Type, Press any key to continue...");
     }
     else {
         game->current_gun = NULL;
-        game->current_gun = game->gun[location];
-        strcpy(mas, "You have taken GUN with Type{");
-        switch(location) {
+        game->current_gun = game->gun[arr[location][1]];
+        strcpy(mas, "You have taken GUN with Type {");
+        switch(arr[location][1]) {
             case 0:
                 strcat(mas, "Mace}");
                 break;
@@ -882,7 +903,7 @@ void guns_menu(Game *game) {
                 strcat(mas, "Sword}");
                 break;
         }
-        sprintf(mas + strlen(mas), "with %d Number of it! Press any key to continue...", game->current_gun->counter);
+        sprintf(mas + strlen(mas), " with %d Number of it! Press any key to continue...", game->current_gun->counter);
     }
 
     move(0, 1);
@@ -905,10 +926,12 @@ void guns_menu(Game *game) {
 void spells_menu(Game *game, int time_passed) {
     WINDOW *spell_menu = newwin(40, 146, 1, 1);
     char str[3][100] = {
-        "    Health\t\tNo\t\t\tNo\t\t\tYes\t\t",
-        "    Spead\t\tNo\t\t\tYes\t\t\tNo\t\t",
-        "    Damage\t\tYes\t\t\tNo\t\t\tNo\t\t"
+        "  Health\t\tNo\t\t\tNo\t\t\tYes\t\t",
+        "  Spead\t\tNo\t\t\tYes\t\t\tNo\t\t",
+        "  Damage\t\tYes\t\t\tNo\t\t\tNo\t\t"
     };
+    wchar_t wt[3] = {0x0001F52E, 0x0001F680, 0x0001F4A5};
+
     for(int i = 0; i < 3; i++) {
         sprintf(str[i] + strlen(str[i]), "%d\t", game->spell_num[i]);
     }
@@ -923,11 +946,14 @@ void spells_menu(Game *game, int time_passed) {
         mvwaddstr(spell_menu, 15, 25, "------------------------------------------------------------------------------------------------");
         wattron(spell_menu, A_BOLD);
 
-        for(int i = 0; i < 3; i++) 
-        mvwaddstr(spell_menu, 16 + i, 25, str[i]);
+        for(int i = 0; i < 3; i++) {
+            mvwprintw(spell_menu, 16 + i, 25, "%lc", wt[i]);
+            mvwaddstr(spell_menu, 16 + i, 27, str[i]);
+        }
         wattroff(spell_menu, COLOR_PAIR(12));
         wattron(spell_menu, COLOR_PAIR(21));
-        mvwaddstr(spell_menu, 16 + location, 25, str[location]);
+        mvwprintw(spell_menu, 16 + location, 25, "%lc", wt[location]);
+        mvwaddstr(spell_menu, 16 + location, 27, str[location]);
         wattroff(spell_menu, COLOR_PAIR(21));
         wrefresh(spell_menu);
 
@@ -1226,7 +1252,7 @@ void hit_enemy(Game *game, int *save_shot, bool is_a) {
                     game->floors[game->player_floor].map[room->guns[room->gun_num - 1]->location.y][room->guns[room->gun_num - 1]->location.x] = 'U';
                     switch(room->guns[room->gun_num - 1]->type) {
                         case Mace:
-                            room->guns[room->gun_num - 1]->unicode = 0x0001FA93;
+                            room->guns[room->gun_num - 1]->unicode = 0x0001F531;
                             break;
                         case Dagger:
                             room->guns[room->gun_num - 1]->damage = 12;
@@ -1241,7 +1267,7 @@ void hit_enemy(Game *game, int *save_shot, bool is_a) {
                             room->guns[room->gun_num - 1]->counter = 1;
                             strcpy(room->guns[room->gun_num - 1]->name, "Magic_Wand");
                             room->guns[room->gun_num - 1]->distance = 10;
-                            room->guns[room->gun_num - 1]->unicode = 0x0001FA84;
+                            room->guns[room->gun_num - 1]->unicode = 0x0001F4DC;
                             //unicode
                             break;
                         case Normal_Arrow:
@@ -1280,7 +1306,7 @@ void hit_enemy(Game *game, int *save_shot, bool is_a) {
                 game->floors[game->player_floor].map[room->guns[room->gun_num - 1]->location.y][room->guns[room->gun_num - 1]->location.x] = 'U';
                 switch(room->guns[room->gun_num - 1]->type) {
                     case Mace:
-                        room->guns[room->gun_num - 1]->unicode = 0x0001FA93;
+                        room->guns[room->gun_num - 1]->unicode = 0x0001F531;
                         break;
                     case Dagger:
                         room->guns[room->gun_num - 1]->damage = 12;
@@ -1295,7 +1321,7 @@ void hit_enemy(Game *game, int *save_shot, bool is_a) {
                         room->guns[room->gun_num - 1]->counter = 1;
                         strcpy(room->guns[room->gun_num - 1]->name, "Magic_Wand");
                         room->guns[room->gun_num - 1]->distance = 10;
-                        room->guns[room->gun_num - 1]->unicode = 0x0001FA84;
+                        room->guns[room->gun_num - 1]->unicode = 0x0001F4DC;
                         //unicode
                         break;
                     case Normal_Arrow:
