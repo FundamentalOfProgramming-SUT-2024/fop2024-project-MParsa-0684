@@ -254,12 +254,10 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                         room->foods[i]->unicode = 0x0001F34E;
                         break;
                     case Excellent:
-                        room->foods[i]->unicode = 0x0001F969;
-                        //unicode
+                        room->foods[i]->unicode = 0x0001F370;
                         break;
                     case Magical:
                         room->foods[i]->unicode = 0x0001F347;
-                        //unicode
                         break;
                     case Toxic:
                         // 1F344
@@ -288,11 +286,9 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                 switch(room->golds[i]->type) {
                     case Regular:
                         room->golds[i]->unicode = 0x0001F4B0;
-                        //unicode
                         break;
                     case Black:
                         room->golds[i]->unicode = 0x0001F6E2;
-                        //unicode
                         break;
                 }
             }
@@ -324,7 +320,6 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                         strcpy(room->guns[i]->name, "Dagger");
                         room->guns[i]->distance = 5;
                         room->guns[i]->unicode = 0x0001F528;
-                        //unicode
                         break;
                     case Magic_Wand:
                         room->guns[i]->damage = 15;
@@ -332,7 +327,6 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                         strcpy(room->guns[i]->name, "Magic_Wand");
                         room->guns[i]->distance = 10;
                         room->guns[i]->unicode = 0x0001FA84;
-                        //unicode
                         break;
                     case Normal_Arrow:
                         room->guns[i]->damage = 5;
@@ -340,7 +334,6 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                         strcpy(room->guns[i]->name, "Normal_Arrow");
                         room->guns[i]->distance = 5;
                         room->guns[i]->unicode = 0x0001F3F9;
-                        //unicode
                         break;
                     case Sword:
                         room->guns[i]->damage = 10;
@@ -348,7 +341,6 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                         strcpy(room->guns[i]->name, "Sword");
                         room->guns[i]->distance = 1;
                         room->guns[i]->unicode = 0x0001F5E1;
-                        //unicode
                         break;
                 }
             }
@@ -372,15 +364,12 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                 switch(room->spells[i]->type) {
                     case Health:
                         room->spells[i]->unicode = 0x0001F52E;
-                        //unicode
                         break;
                     case Speed:
                         room->spells[i]->unicode = 0x0001F680;
-                        //unicode
                         break;
                     case Damage:
                         room->spells[i]->unicode = 0x0001F4A5;
-                        //unicode
                         break;
                 }
             }
@@ -398,7 +387,6 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
             if(floor->map[room->traps[i]->location.y][room->traps[i]->location.x] == '.') {
                 flag = false;
                 floor->map[room->traps[i]->location.y][room->traps[i]->location.x] = '^';
-                // unicode
             }
         }
     }
@@ -423,39 +411,34 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                         room->enemies[i]->following = 0;
                         room->enemies[i]->chr = 'd';
                         room->enemies[i]->unicode = 0x0001F608;
-                        //unicode
                         break;
                     case Monster:
-                        room->enemies[i]->damage = 1;
+                        room->enemies[i]->damage = 2;
                         room->enemies[i]->health = 10;
                         room->enemies[i]->following = 0;
                         room->enemies[i]->chr = 'f';
                         room->enemies[i]->unicode = 0x0001F432;
-                        //unicode
                         break;
                     case Giant:
-                        room->enemies[i]->damage = 1;
+                        room->enemies[i]->damage = 3;
                         room->enemies[i]->health = 15;
                         room->enemies[i]->following = 5;
                         room->enemies[i]->chr = 'g';
                         room->enemies[i]->unicode = 0x0001F47B;
-                        //unicode
                         break;
                     case Snake:
-                        room->enemies[i]->damage = 1;
+                        room->enemies[i]->damage = 4;
                         room->enemies[i]->health = 20;
                         room->enemies[i]->following = 1000000;
                         room->enemies[i]->chr = 's';
                         room->enemies[i]->unicode = 0x0001F40D;
-                        //unicode
                         break;
                     case Undeed:
-                        room->enemies[i]->damage = 1;
+                        room->enemies[i]->damage = 6;
                         room->enemies[i]->health = 30;
                         room->enemies[i]->following = 5;
                         room->enemies[i]->chr = 'u';
-                        room->enemies[i]->unicode = 0x00002620;
-                        //unicode
+                        room->enemies[i]->unicode = 0x0001F409;
                         break;
                 }
                 floor->map[room->enemies[i]->location.y][room->enemies[i]->location.x] = room->enemies[i]->chr;
@@ -473,7 +456,6 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
             if(floor->map[room->staircase->location.y][room->staircase->location.x] == '.') {
                 flag = false;
                 floor->map[room->staircase->location.y][room->staircase->location.x] = '<';
-                // unicode
             }
         }
 
@@ -493,7 +475,6 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                 flag = false;
                 floor->map[room->master_key->location.y][room->master_key->location.x] = '!';
                 room->master_key->unicode = 0x0001F511;
-                // unicode
             }
         }
     }
@@ -1271,6 +1252,7 @@ void play_game(Game *game) {
                         }
                     }
 
+                    refresh_enemy_following(game);
                     // show new room
                     temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
                     for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
@@ -1293,6 +1275,7 @@ void play_game(Game *game) {
                         }
                     }
 
+                    refresh_enemy_following(game);
                     // show new room
                     temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
                     for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
@@ -1314,6 +1297,7 @@ void play_game(Game *game) {
                             }
                         }
 
+                        refresh_enemy_following(game);
                         // show new room
                         temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
                         for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
@@ -1539,6 +1523,46 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed,
     clear_space2();
     wclear(game_window);
 
+    // Logics
+    if(time_passed % 15 == 0 && time_passed != 0)
+        game->Health -= 1;
+    if(game->time_power != -1 && (time_passed - game->time_power) > 10) {
+        game->power_up = false;
+        game->speed_up = false;
+        game->time_power = -1;
+    }
+
+    // Enemies Movement
+    if(game->player_room != -1) {
+        for(int i = 0; i < game->floors[game->player_floor].Rooms[game->player_room].enemy_num; i++) {
+            if(game->floors[game->player_floor].Rooms[game->player_room].enemies[i] != NULL) {
+                int dy = game->player_location.y - game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y;
+                int dx = game->player_location.x - game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x;
+
+                if(abs(dy) <= 1 && abs(dx) <= 1) {
+                    game->Health -= game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->damage;
+                }
+                else if(game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->following > 0) {
+                    game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y][game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x] = '.';
+                    if(abs(dy) > 1) {
+                        if(dy > 1) 
+                            game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y++;
+                        else    
+                            game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y--;
+                    }
+                    else {
+                        if(dx > 1)
+                            game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x++;
+                        else
+                            game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x--;
+                    }
+                    game->floors[game->player_floor].map[game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y][game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x] = game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->chr;
+                    game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->following--;
+                }
+            }
+        }
+    }
+
     for(int i = 0; i < 40; i++) {
         for(int j = 0; j < 146; j++) {
             int color_num;
@@ -1635,15 +1659,6 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed,
         move(0, 1);
         addstr("PRESS >/< to go up/down stair...");
         attroff(COLOR_PAIR(3) | A_BOLD);
-    }
-
-    // Logics
-    if(time_passed % 15 == 0 && time_passed != 0)
-        game->Health -= 1;
-    if(game->time_power != -1 && (time_passed - game->time_power) > 10) {
-        game->power_up = false;
-        game->speed_up = false;
-        game->time_power = -1;
     }
     
 

@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 // Initial defines
-int directions[8][2] = {
+int directions[9][2] = {
     {0, -1}, //0
     {1, -1}, //1
     {1, 0},  //2
@@ -25,7 +25,8 @@ int directions[8][2] = {
     {0, 1},  //4
     {-1, 1}, //5
     {-1, 0}, //6
-    {-1, -1} //7
+    {-1, -1}, //7
+    {0, 0} //8
 };
 
 
@@ -39,8 +40,6 @@ typedef struct Music{
 typedef struct Location{
     int x, y;
 } Location;
-
-
 
 // Enums
 enum Difficulty {
@@ -1062,7 +1061,7 @@ void hit_enemy(Game *game, int *save_shot, bool is_a) {
     bool flag = false;
     
     if(game->current_gun->type == Mace || game->current_gun->type == Sword) {
-        for(int i = 0; i < 8; i++) {
+        for(int i = 0; i < 9; i++) {
             int y = game->player_location.y + directions[i][1], x = game->player_location.x + directions[i][0];
             if(y >= 0 && x >= 0 && y < 40 && x < 146 && 
             (game->floors[game->player_floor].map[y][x] == 'd' || 
@@ -1339,6 +1338,32 @@ void hit_enemy(Game *game, int *save_shot, bool is_a) {
         for(int i = 0; i < 5; i++) {
             if(game->gun[i] != NULL && game->gun[i]->counter == 0)
                 game->gun[i] = NULL;
+        }
+    }
+}
+
+void refresh_enemy_following(Game *game) {
+    if(game->player_room != -1) {
+        for(int i = 0; i < game->floors[game->player_floor].Rooms[game->player_room].enemy_num; i++) {
+            if(game->floors[game->player_floor].Rooms[game->player_room].enemies[i] != NULL) {
+                switch(game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->type) {
+                    case Deamon:
+                        game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->following = 0;
+                        break;
+                    case Monster:
+                        game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->following = 0;
+                        break;
+                    case Giant:
+                        game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->following = 5;
+                        break;
+                    case Snake:
+                        game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->following = 1000000;
+                        break;
+                    case Undeed:
+                        game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->following = 5;
+                        break;
+                }
+            }
         }
     }
 }
