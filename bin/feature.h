@@ -279,7 +279,7 @@ void guns_menu(Game *game);
 void spells_menu(Game *game, int time_passed);
 void password_generator(Game *game, Locked_Door *locked_door, int dir);
 void game_lost(Game *game);
-void hit_enemy(Game *game);
+void hit_enemy(Game *game, int *save_shot, bool is_a);
 
 void action_game(Game *game, int dir, int time_passed) {
     Room *temp_room;
@@ -581,21 +581,21 @@ void whole_game(Game *game, Floor *floor, bool is_unicode) {
             }
 
             //spell
-            for(int i = 0; i < game->floors[game->player_floor].Rooms[game->player_room].spell_num; i++) {
-                if(game->floors[game->player_floor].Rooms[game->player_room].spells[i] != NULL)
-                    mvwprintw(whole_map, game->floors[game->player_floor].Rooms[game->player_room].spells[i]->location.y, game->floors[game->player_floor].Rooms[game->player_room].spells[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[game->player_room].spells[i]->unicode);
+            for(int i = 0; i < game->floors[game->player_floor].Rooms[j].spell_num; i++) {
+                if(game->floors[game->player_floor].Rooms[j].spells[i] != NULL)
+                    mvwprintw(whole_map, game->floors[game->player_floor].Rooms[j].spells[i]->location.y, game->floors[game->player_floor].Rooms[j].spells[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[j].spells[i]->unicode);
             }
         
             //spell
-            for(int i = 0; i < game->floors[game->player_floor].Rooms[game->player_room].spell_num; i++) {
-                if(game->floors[game->player_floor].Rooms[game->player_room].spells[i] != NULL)
-                    mvwprintw(whole_map, game->floors[game->player_floor].Rooms[game->player_room].spells[i]->location.y, game->floors[game->player_floor].Rooms[game->player_room].spells[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[game->player_room].spells[i]->unicode);
+            for(int i = 0; i < game->floors[game->player_floor].Rooms[j].spell_num; i++) {
+                if(game->floors[game->player_floor].Rooms[j].spells[i] != NULL)
+                    mvwprintw(whole_map, game->floors[game->player_floor].Rooms[j].spells[i]->location.y, game->floors[game->player_floor].Rooms[j].spells[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[j].spells[i]->unicode);
             }
 
             //enemy
-            for(int i = 0; i < game->floors[game->player_floor].Rooms[game->player_room].enemy_num; i++) {
-                if(game->floors[game->player_floor].Rooms[game->player_room].enemies[i] != NULL)
-                    mvwprintw(whole_map, game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y, game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->unicode);
+            for(int i = 0; i < game->floors[game->player_floor].Rooms[j].enemy_num; i++) {
+                if(game->floors[game->player_floor].Rooms[j].enemies[i] != NULL)
+                    mvwprintw(whole_map, game->floors[game->player_floor].Rooms[j].enemies[i]->location.y, game->floors[game->player_floor].Rooms[j].enemies[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[j].enemies[i]->unicode);
             }
 
             // master key
@@ -1043,13 +1043,14 @@ void game_lost(Game *game) {
     delwin(lost);
 }
 
-void hit_enemy(Game *game) {
+void hit_enemy(Game *game, int *save_shot, bool is_a) {
+    // if in raods instead of rooms
     if(game->player_room == -1) {
         move(0, 1);
         attron(COLOR_PAIR(3) | A_BOLD);
         addstr("You can use your GUN just in Rooms! Press any key to continue...");
 
-        int c = getch();
+        getch();
         for(int i = 0; i < 146; i++) {
             move(0, i);
             addch(' ');
@@ -1059,6 +1060,7 @@ void hit_enemy(Game *game) {
         return;  
     }
     bool flag = false;
+    
     if(game->current_gun->type == Mace || game->current_gun->type == Sword) {
         for(int i = 0; i < 8; i++) {
             int y = game->player_location.y + directions[i][1], x = game->player_location.x + directions[i][0];
@@ -1084,57 +1086,78 @@ void hit_enemy(Game *game) {
         }
     }
     else {
-        move(0, 1);
-        attron(COLOR_PAIR(3) | A_BOLD);
-        addstr("Please select a Direction to shoot the gun[j/k/h/l/y/u/b/n]...");
-
-        int c = getch();
-        for(int i = 0; i < 146; i++) {
-            move(0, i);
-            addch(' ');
-        }    
-
-        attroff(COLOR_PAIR(3) | A_BOLD);        
-
         int dir = -1;
-        switch (c)
-        {
-        case 'j':
-            dir = 0;
-            break;
-        
-        case 'k':
-            dir = 4;
-            break;
-        
-        case 'l':
-            dir = 2;
-            break;
-        
-        case 'h':
-            dir = 6;
-            break;
+        if(is_a == true) {
+            if(save_shot[1] == -1) {
+                move(0, 1);
+                attron(COLOR_PAIR(3) | A_BOLD);
+                addstr("Your before direction was incorrect! It cann't be repeated! Press any key to continue...");
 
-        case 'y':
-            dir = 7;
-            break;
-        
-        case 'u':
-            dir = 1;
-            break;
-        
-        case 'b':
-            dir = 5;
-            break;
-        
-        case 'n':
-            dir = 3;
-            break;
-        
-        default:
-            break;
+                getch();
+                for(int i = 0; i < 146; i++) {
+                    move(0, i);
+                    addch(' ');
+                }    
+
+                attroff(COLOR_PAIR(3) | A_BOLD); 
+                return;       
+            }
+            else 
+                dir = save_shot[1];
+        }
+        else {
+            move(0, 1);
+            attron(COLOR_PAIR(3) | A_BOLD);
+            addstr("Please select a Direction to shoot the gun[j/k/h/l/y/u/b/n]...");
+
+            int c = getch();
+            for(int i = 0; i < 146; i++) {
+                move(0, i);
+                addch(' ');
+            }    
+
+            attroff(COLOR_PAIR(3) | A_BOLD);        
+
+            switch (c)
+            {
+            case 'j':
+                dir = 0;
+                break;
+            
+            case 'k':
+                dir = 4;
+                break;
+            
+            case 'l':
+                dir = 2;
+                break;
+            
+            case 'h':
+                dir = 6;
+                break;
+
+            case 'y':
+                dir = 7;
+                break;
+            
+            case 'u':
+                dir = 1;
+                break;
+            
+            case 'b':
+                dir = 5;
+                break;
+            
+            case 'n':
+                dir = 3;
+                break;
+            
+            default:
+                break;
+            }
         }
 
+        bool where = false;
         if(dir == -1) {
             move(0, 1);
             attron(COLOR_PAIR(3) | A_BOLD);
@@ -1150,6 +1173,7 @@ void hit_enemy(Game *game) {
             return; 
         }
         else {
+            save_shot[1] = dir;
             int y = game->player_location.y, x = game->player_location.x;
             for(int iii = 0; iii <= game->current_gun->distance; iii++) {
                 if(game->floors[game->player_floor].map[y][x] == '.' ||
@@ -1188,6 +1212,7 @@ void hit_enemy(Game *game) {
                         }
                 }
                 else {
+                    where = true;
                     if(iii > 0)
                         y -= directions[dir][1];
                         x -= directions[dir][0];
@@ -1202,14 +1227,14 @@ void hit_enemy(Game *game) {
                     game->floors[game->player_floor].map[room->guns[room->gun_num - 1]->location.y][room->guns[room->gun_num - 1]->location.x] = 'U';
                     switch(room->guns[room->gun_num - 1]->type) {
                         case Mace:
-                            room->guns[room->gun_num - 1]->unicode = 0x00002694;
+                            room->guns[room->gun_num - 1]->unicode = 0x0001FA93;
                             break;
                         case Dagger:
                             room->guns[room->gun_num - 1]->damage = 12;
                             room->guns[room->gun_num - 1]->counter = 1;
                             strcpy(room->guns[room->gun_num - 1]->name, "Dagger");
                             room->guns[room->gun_num - 1]->distance = 5;
-                            room->guns[room->gun_num - 1]->unicode = 0x0001F5E1;
+                            room->guns[room->gun_num - 1]->unicode = 0x0001F528;
                             //unicode
                             break;
                         case Magic_Wand:
@@ -1233,7 +1258,7 @@ void hit_enemy(Game *game) {
                             room->guns[room->gun_num - 1]->counter = 1;
                             strcpy(room->guns[room->gun_num - 1]->name, "Sword");
                             room->guns[room->gun_num - 1]->distance = 1;
-                            room->guns[room->gun_num - 1]->unicode = 0x0001FA93;
+                            room->guns[room->gun_num - 1]->unicode = 0x0001F5E1;
                             //unicode
                             break;
                     }
@@ -1241,6 +1266,59 @@ void hit_enemy(Game *game) {
                     break;
                 }
             } 
+
+            if(flag == false && where == false) {
+                y -= directions[dir][1];
+                x -= directions[dir][0];
+            
+                Room *room = &game->floors[game->player_floor].Rooms[game->player_room];
+                room->gun_num++;
+                room->guns = (Gun **) realloc(room->guns, room->gun_num * sizeof(Gun *));
+                room->guns[room->gun_num - 1] = (Gun *) malloc(sizeof(Gun));
+                room->guns[room->gun_num - 1]->type = game->current_gun->type;
+                room->guns[room->gun_num - 1]->location.y = y;
+                room->guns[room->gun_num - 1]->location.x = x;
+                game->floors[game->player_floor].map[room->guns[room->gun_num - 1]->location.y][room->guns[room->gun_num - 1]->location.x] = 'U';
+                switch(room->guns[room->gun_num - 1]->type) {
+                    case Mace:
+                        room->guns[room->gun_num - 1]->unicode = 0x0001FA93;
+                        break;
+                    case Dagger:
+                        room->guns[room->gun_num - 1]->damage = 12;
+                        room->guns[room->gun_num - 1]->counter = 1;
+                        strcpy(room->guns[room->gun_num - 1]->name, "Dagger");
+                        room->guns[room->gun_num - 1]->distance = 5;
+                        room->guns[room->gun_num - 1]->unicode = 0x0001F528;
+                        //unicode
+                        break;
+                    case Magic_Wand:
+                        room->guns[room->gun_num - 1]->damage = 15;
+                        room->guns[room->gun_num - 1]->counter = 1;
+                        strcpy(room->guns[room->gun_num - 1]->name, "Magic_Wand");
+                        room->guns[room->gun_num - 1]->distance = 10;
+                        room->guns[room->gun_num - 1]->unicode = 0x0001FA84;
+                        //unicode
+                        break;
+                    case Normal_Arrow:
+                        room->guns[room->gun_num - 1]->damage = 5;
+                        room->guns[room->gun_num - 1]->counter = 1;
+                        strcpy(room->guns[room->gun_num - 1]->name, "Normal_Arrow");
+                        room->guns[room->gun_num - 1]->distance = 5;
+                        room->guns[room->gun_num - 1]->unicode = 0x0001F3F9;
+                        //unicode
+                        break;
+                    case Sword:
+                        room->guns[room->gun_num - 1]->damage = 10;
+                        room->guns[room->gun_num - 1]->counter = 1;
+                        strcpy(room->guns[room->gun_num - 1]->name, "Sword");
+                        room->guns[room->gun_num - 1]->distance = 1;
+                        room->guns[room->gun_num - 1]->unicode = 0x0001F5E1;
+                        //unicode
+                        break;
+                }
+                game->current_gun->counter--;
+            }
+
         }
     }
     

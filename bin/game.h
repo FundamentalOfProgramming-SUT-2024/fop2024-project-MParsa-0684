@@ -316,14 +316,14 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                 floor->map[room->guns[i]->location.y][room->guns[i]->location.x] = 'U';
                 switch(room->guns[i]->type) {
                     case Mace:
-                        room->guns[i]->unicode = 0x00002694;
+                        room->guns[i]->unicode = 0x0001FA93;
                         break;
                     case Dagger:
                         room->guns[i]->damage = 12;
                         room->guns[i]->counter = 10;
                         strcpy(room->guns[i]->name, "Dagger");
                         room->guns[i]->distance = 5;
-                        room->guns[i]->unicode = 0x0001F5E1;
+                        room->guns[i]->unicode = 0x0001F528;
                         //unicode
                         break;
                     case Magic_Wand:
@@ -347,7 +347,7 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                         room->guns[i]->counter = 1;
                         strcpy(room->guns[i]->name, "Sword");
                         room->guns[i]->distance = 1;
-                        room->guns[i]->unicode = 0x0001FA93;
+                        room->guns[i]->unicode = 0x0001F5E1;
                         //unicode
                         break;
                 }
@@ -371,11 +371,11 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
                 floor->map[room->spells[i]->location.y][room->spells[i]->location.x] = 'S';
                 switch(room->spells[i]->type) {
                     case Health:
-                        room->spells[i]->unicode = 0x00002795;
+                        room->spells[i]->unicode = 0x0001F52E;
                         //unicode
                         break;
                     case Speed:
-                        room->spells[i]->unicode = 0x000026A1;
+                        room->spells[i]->unicode = 0x0001F680;
                         //unicode
                         break;
                     case Damage:
@@ -697,7 +697,6 @@ void play_game(Game *game) {
 
     //Initial Setups
     clear_space2();
-    setlocale(LC_ALL, "");
     WINDOW *game_window = newwin(40, 146, 1, 1);
     int time_passed = 0;
     // srand(time(NULL));
@@ -713,7 +712,7 @@ void play_game(Game *game) {
     bool is_f = false;
     bool is_moved = false;
     bool is_unicode = true;
-    int save_shot[2];
+    int save_shot[2] = {-1, -1};
     int dir = -1;
     while(flag) {
         paint_floor(game, &game->floors[game->player_floor], game_window, time_passed, is_unicode);            
@@ -1211,12 +1210,12 @@ void play_game(Game *game) {
             // for using gun
             case ' ':
                 // use bool power_up to double the damage
-                hit_enemy(game);
+                hit_enemy(game, save_shot, false);
                 break;
 
             // for repeating gun usage again
             case 'a':
-
+                hit_enemy(game, save_shot, true);
                 break;
 
             // for unicode representing
@@ -1479,7 +1478,18 @@ void play_game(Game *game) {
                 
                 // Traps
                 case '^':
+                    game->Health -= 20;
+                    move(0, 1);
+                    attron(COLOR_PAIR(3) | A_BOLD);
+                    addstr("Trap decreased your Health by 20! Press any key to continue...");
 
+                    getch();
+                    for(int i = 0; i < 146; i++) {
+                        move(0, i);
+                        addch(' ');
+                    }    
+
+                    attroff(COLOR_PAIR(3) | A_BOLD);
                     break;
                 
                 // Master_Key
@@ -1667,21 +1677,21 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed,
             }
 
             //spell
-            for(int i = 0; i < game->floors[game->player_floor].Rooms[game->player_room].spell_num; i++) {
-                if(game->floors[game->player_floor].Rooms[game->player_room].spells[i] != NULL)
-                    mvwprintw(game_window, game->floors[game->player_floor].Rooms[game->player_room].spells[i]->location.y, game->floors[game->player_floor].Rooms[game->player_room].spells[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[game->player_room].spells[i]->unicode);
+            for(int i = 0; i < game->floors[game->player_floor].Rooms[j].spell_num; i++) {
+                if(game->floors[game->player_floor].Rooms[j].spells[i] != NULL)
+                    mvwprintw(game_window, game->floors[game->player_floor].Rooms[j].spells[i]->location.y, game->floors[game->player_floor].Rooms[j].spells[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[j].spells[i]->unicode);
             }
         
             //spell
-            for(int i = 0; i < game->floors[game->player_floor].Rooms[game->player_room].spell_num; i++) {
-                if(game->floors[game->player_floor].Rooms[game->player_room].spells[i] != NULL)
-                    mvwprintw(game_window, game->floors[game->player_floor].Rooms[game->player_room].spells[i]->location.y, game->floors[game->player_floor].Rooms[game->player_room].spells[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[game->player_room].spells[i]->unicode);
+            for(int i = 0; i < game->floors[game->player_floor].Rooms[j].spell_num; i++) {
+                if(game->floors[game->player_floor].Rooms[j].spells[i] != NULL)
+                    mvwprintw(game_window, game->floors[game->player_floor].Rooms[j].spells[i]->location.y, game->floors[game->player_floor].Rooms[j].spells[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[j].spells[i]->unicode);
             }
 
             //enemy
-            for(int i = 0; i < game->floors[game->player_floor].Rooms[game->player_room].enemy_num; i++) {
-                if(game->floors[game->player_floor].Rooms[game->player_room].enemies[i] != NULL)
-                    mvwprintw(game_window, game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.y, game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[game->player_room].enemies[i]->unicode);
+            for(int i = 0; i < game->floors[game->player_floor].Rooms[j].enemy_num; i++) {
+                if(game->floors[game->player_floor].Rooms[j].enemies[i] != NULL)
+                    mvwprintw(game_window, game->floors[game->player_floor].Rooms[j].enemies[i]->location.y, game->floors[game->player_floor].Rooms[j].enemies[i]->location.x, "%lc", game->floors[game->player_floor].Rooms[j].enemies[i]->unicode);
             }
 
             // master key
