@@ -48,6 +48,7 @@ void main_menu() {
     attron(A_BOLD | COLOR_PAIR(1));
     addstr("REGUE GAME");
 
+
     // wchar_t gold = 0x0001F312;
     // mvprintw(3, 3, "◌");
 

@@ -19,16 +19,15 @@ void init_game();
 
 int main() {
 
+    setlocale(LC_ALL, "");
     initscr();
     // clear_space();
-    setlocale(LC_ALL, "");
     srand(time(NULL));
     noecho();
     cbreak();
     // curs_set(FALSE);
     keypad(stdscr, true);
     refresh();
-
 
 
     // Error for not supporting colors

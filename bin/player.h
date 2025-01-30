@@ -159,17 +159,23 @@ void score_table() {
             // first player is red and bold
             if(start_table + i == 0) {
                 attron(A_BOLD | COLOR_PAIR(4));
-                addstr("<G> ");
+                wchar_t gold = 0x0001F947;
+                printw("%lc", gold);
+                // addstr("<G> ");
             }
             // second player is green
             if(start_table + i == 1) {
                 attron(A_BOLD | COLOR_PAIR(5));
-                addstr("<S> ");
+                wchar_t silver = 0x0001F948;
+                printw("%lc", silver);
+                // addstr("<S> ");
             }
             // third player is yellow
             if(start_table + i == 2) {
                 attron(A_BOLD | COLOR_PAIR(6));
-                addstr("<B> ");
+                wchar_t bronze = 0x0001F949;
+                printw("%lc", bronze);
+                // addstr("<B> ");
             }
             else 
                 addstr("    ");
