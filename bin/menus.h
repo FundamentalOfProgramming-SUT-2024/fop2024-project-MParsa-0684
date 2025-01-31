@@ -383,11 +383,18 @@ int check_player() {
 void official_login() {
     echo();
     refresh();
-    
+    clear_space();
+
+    // move(0, 1);
+
     char usern[100], passw[100];
     while(1) {
         // header UI
         clear_space();
+        refresh();
+        attron(COLOR_PAIR(3) | A_BOLD);
+        mvprintw(0, 1, "If you forgot your Password, Enter 'FORGET' to autofill that!");
+        attroff(COLOR_PAIR(3) | A_BOLD);   
         refresh();
         move(12 ,69);
         attron(A_BOLD | COLOR_PAIR(1));
@@ -422,6 +429,11 @@ void official_login() {
         // giving hint for password forget
         getch();
     }
+
+    for(int i = 0; i < 146; i++) {
+        move(0, i);
+        addch(' ');
+    }    
 
     // entering player arguments
     char file_path[200] = "../players/";
@@ -513,6 +525,11 @@ int check_login(char *usern, char *passw) {
     size_t len = strlen(playerpass);
     if(playerpass[len - 1] == '\n')
         playerpass[len - 1] = '\0';
+    
+    if(strcmp(passw, "FORGET") == 0) {
+        strcpy(passw, playerpass);
+    }
+
     if(strcmp(passw, playerpass) != 0) {
         beep();
         addstr("Password is not correct! Press ENTER to try again...");
