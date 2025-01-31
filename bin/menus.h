@@ -393,7 +393,7 @@ void official_login() {
         clear_space();
         refresh();
         attron(COLOR_PAIR(3) | A_BOLD);
-        mvprintw(0, 1, "If you forgot your Password, Enter 'FORGET' to autofill that!");
+        mvprintw(0, 1, "If you forgot your Password, Enter 'FORGOT' to autofill that!");
         attroff(COLOR_PAIR(3) | A_BOLD);   
         refresh();
         move(12 ,69);
@@ -526,7 +526,7 @@ int check_login(char *usern, char *passw) {
     if(playerpass[len - 1] == '\n')
         playerpass[len - 1] = '\0';
     
-    if(strcmp(passw, "FORGET") == 0) {
+    if(strcmp(passw, "FORGOT") == 0) {
         strcpy(passw, playerpass);
     }
 
