@@ -451,12 +451,12 @@ void official_login() {
     fgets(player->email, 100, player_file);
     delete_enter(player->email);
     
-    fscanf(player_file, "%d", &(player->total_score));
-    fscanf(player_file, "%d", &(player->total_gold));
-    fscanf(player_file, "%d", &(player->num_finished));
+    fprintf(player_file, "%d\n", &(player->total_score));
+    fprintf(player_file, "%d\n", &(player->total_gold));
+    fprintf(player_file, "%d\n", &(player->num_finished));
     fscanf(player_file, "%ld", &(player->time_experience));
-    fscanf(player_file, "%d", &(player->game_difficulty));
-    fscanf(player_file, "%d", &(player->color));
+    fprintf(player_file, "%d\n", &(player->game_difficulty));
+    fprintf(player_file, "%d\n", &(player->color));
     player->music = (Music *) malloc(sizeof(Music));
     fgets(player->music->music_path, 100, player_file);
     delete_enter(player->music->music_path);
@@ -495,6 +495,7 @@ void official_login() {
             fscanf(player_file, "%d", &game->floors[i].staircase_num);
             fscanf(player_file, "%d", &game->floors[i].master_key_num);
 
+            game->floors[i].Rooms = (Room *) calloc(game->floors[i].room_num, sizeof(Room));
             for(int j = 0; j < game->floors[i].room_num; j++) {
                 Room *room = &game->floors[i].Rooms[j];
                 fscanf(player_file, "%d", &room->start.y);
@@ -723,13 +724,12 @@ void official_login() {
         game->food_num = (int *) calloc(3, sizeof(int));
         for(int i = 0; i < 3; i++) {
             fscanf(player_file, "%d", &game->food_num[i]);
-            game->foods[i] = (Food **)calloc(game->food_num[i], sizeof(Food *));
+            game->foods[i] = (Food **) calloc(game->food_num[i], sizeof(Food *));
             for(int z = 0; z < game->food_num[i]; z++) {
                 fscanf(player_file, "%d", &is);
                 if(is == 0)
                     continue;
 
-                game->foods[z] = (Food **) calloc(1, sizeof(Food *));
                 game->foods[z][0] = (Food *) calloc(1, sizeof(Food));
                 game->foods[z][0]->location.y = is;
                 // fscanf(player_file, "%d", &);
@@ -802,7 +802,6 @@ void official_login() {
                 if(is == 0)
                     continue;
 
-                game->spell[z] = (Spell **) calloc(1, sizeof(Spell *));
                 game->spell[z][0] = (Spell *) calloc(1, sizeof(Spell));
                 game->spell[z][0]->location.y = is;
                 fscanf(player_file, "%d", &game->spell[z][0]->location.x);
@@ -915,6 +914,7 @@ void guest_login() {
             fscanf(player_file, "%d", &game->floors[i].staircase_num);
             fscanf(player_file, "%d", &game->floors[i].master_key_num);
 
+            game->floors[i].Rooms = (Room *) calloc(game->floors[i].room_num, sizeof(Room));
             for(int j = 0; j < game->floors[i].room_num; j++) {
                 Room *room = &game->floors[i].Rooms[j];
                 fscanf(player_file, "%d", &room->start.y);
@@ -1149,7 +1149,6 @@ void guest_login() {
                 if(is == 0)
                     continue;
 
-                game->foods[z] = (Food **) calloc(1, sizeof(Food *));
                 game->foods[z][0] = (Food *) calloc(1, sizeof(Food));
                 game->foods[z][0]->location.y = is;
                 // fscanf(player_file, "%d", &);
@@ -1222,7 +1221,6 @@ void guest_login() {
                 if(is == 0)
                     continue;
 
-                game->spell[z] = (Spell **) calloc(1, sizeof(Spell *));
                 game->spell[z][0] = (Spell *) calloc(1, sizeof(Spell));
                 game->spell[z][0]->location.y = is;
                 fscanf(player_file, "%d", &game->spell[z][0]->location.x);
@@ -1446,6 +1444,284 @@ void player_menu() {
 }
 
 void save_game() {
+    unlink(player->file_path);
+    FILE* player_file = fopen(player->file_path, "w");
+    fprintf(player_file, "%s\n",player->username);
+    // delete_enter(player->username);
+    
+    fprintf(player_file, "%s\n", player->password);
+    // delete_enter(player->password);
+    
+    fprintf(player_file, "%s\n", player->email);
+    // delete_enter(player->email);
+    
+    fprintf(player_file, "%d\n", (player->total_score));
+    fprintf(player_file, "%d\n", (player->total_gold));
+    fprintf(player_file, "%d\n", (player->num_finished));
+    fprintf(player_file, "%ld\n", (player->time_experience));
+    fprintf(player_file, "%d\n", (player->game_difficulty));
+    fprintf(player_file, "%d\n", (player->color));
+    // player->music = (Music *) malloc(sizeof(Music));
+    fprintf(player_file, "%s\n", player->music->music_path);
+    // delete_enter(player->music->music_path);
+    // char g[100];
+    // fscanf(player_file, "%s", g);
+    if(player->game == NULL) {
+        fprintf(player_file, "(null)\n");
+    }
+    else {
+        Game *game = player->game;
+        // game_name
+        fprintf(player_file, "%s\n", game->name);
+        // strcpy(game->name, g);
+        
+        
+        // game_floors_calloc
+        fprintf(player_file, "%d\n", game->floor_num);
+        for(int i = 0; i < game->floor_num; i++) {
+            fprintf(player_file, "%d\n", game->floors[i].floor_visit);
+            for(int ii = 0; ii < 40; ii++) {
+                for(int jj = 0; jj < 146; jj++) 
+                    fprintf(player_file, "%c", game->floors[i].map[ii][jj]);
+                fprintf(player_file, "\n");
+            }
+
+            for(int ii = 0; ii < 40; ii++) {
+                for(int jj = 0; jj < 146; jj++) 
+                    fprintf(player_file, "%d ", game->floors[i].visit[ii][jj]);
+                fprintf(player_file, "\n");
+            }
+
+            fprintf(player_file, "%d\n", game->floors[i].room_num);
+            fprintf(player_file, "%d\n", game->floors[i].has_gold);
+            fprintf(player_file, "%d\n", game->floors[i].staircase_num);
+            fprintf(player_file, "%d\n", game->floors[i].master_key_num);
+
+            for(int j = 0; j < game->floors[i].room_num; j++) {
+                Room *room = &game->floors[i].Rooms[j];
+                fprintf(player_file, "%d\n", room->start.y);
+                fprintf(player_file, "%d\n", room->start.x);
+                fprintf(player_file, "%d\n", room->size.y);
+                fprintf(player_file, "%d\n", room->size.x);
+                fprintf(player_file, "%d\n", room->type);
+
+                // foods
+                fprintf(player_file, "%d\n", room->food_num);
+                for(int z = 0; z < room->food_num; z++) {
+                    if(room->foods[z] == NULL) {
+                        fprintf(player_file, "%d\n", 0);
+                        continue;
+                    }
+
+                    // room->foods[z]->location.y = is;
+                    // fprintf(player_file, "%d\n", &);
+                    fprintf(player_file, "%d\n", room->foods[z]->location.y);
+                    fprintf(player_file, "%d\n", room->foods[z]->location.x);
+                    fprintf(player_file, "%d\n", room->foods[z]->type);
+                    fprintf(player_file, "%d\n", room->foods[z]->time_passed);
+                }
+
+                // golds
+                fprintf(player_file, "%d\n", room->gold_num);
+                for(int z = 0; z < room->gold_num; z++) {
+                    if(room->golds[z] == NULL) {
+                        fprintf(player_file, "%d\n", 0);
+                        continue;
+                    }
+
+                    fprintf(player_file, "%d\n", room->golds[z]->location.y);
+                    fprintf(player_file, "%d\n", room->golds[z]->location.x);
+                    fprintf(player_file, "%d\n", room->golds[z]->type);
+                }
+            
+                // guns
+                fprintf(player_file, "%d\n", room->gun_num);
+                for(int z = 0; z < room->gun_num; z++) {
+                    if(room->guns[z] == NULL) {
+                        fprintf(player_file, "%d\n", 0);
+                        continue;
+                    }
+
+                    fprintf(player_file, "%d\n", room->guns[z]->location.y);
+                    fprintf(player_file, "%d\n", room->guns[z]->location.x);
+                    fprintf(player_file, "%d\n", room->guns[z]->type);
+                    fprintf(player_file, "%d\n", room->guns[z]->damage);
+                    fprintf(player_file, "%d\n", room->guns[z]->counter);
+                    fprintf(player_file, "%d\n", room->guns[z]->distance);
+                    fprintf(player_file, "%s\n", room->guns[z]->name);
+                }
+            
+                //  spell
+                fprintf(player_file, "%d\n", room->spell_num);
+                for(int z = 0; z < room->spell_num; z++) {
+                    if(room->spells[z] == NULL) {
+                        fprintf(player_file, "%d\n", 0);
+                        continue;
+                    }
+
+                    fprintf(player_file, "%d\n", room->spells[z]->location.y);
+                    fprintf(player_file, "%d\n", room->spells[z]->location.x);
+                    fprintf(player_file, "%d\n", room->spells[z]->type);
+                }
+            
+                // trap
+                fprintf(player_file, "%d\n", room->trap_num);
+                for(int z = 0; z < room->trap_num; z++) {
+                    if(room->traps[z] == NULL) {
+                        fprintf(player_file, "%d\n", 0);
+                        continue;
+                    }
+
+                    fprintf(player_file, "%d\n", room->traps[z]->location.y);
+                    fprintf(player_file, "%d\n", room->traps[z]->location.x); 
+                }
+            
+                // enemy
+                fprintf(player_file, "%d\n", room->enemy_num);
+                for(int z = 0; z < room->enemy_num; z++) {
+                    if(room->enemies[z] == NULL) {
+                        fprintf(player_file, "%d\n", 0);
+                        continue;
+                    }
+
+                    fprintf(player_file, "%d\n", room->enemies[z]->location.y);
+                    fprintf(player_file, "%d\n", room->enemies[z]->location.x);
+                    fprintf(player_file, "%d\n", room->enemies[z]->type);
+                    fprintf(player_file, "%d\n", room->enemies[z]->damage);
+                    fprintf(player_file, "%d\n", room->enemies[z]->health);
+                    fprintf(player_file, "%d\n", room->enemies[z]->following);
+                    fprintf(player_file, "%d\n", room->enemies[z]->is_moving);
+                    fprintf(player_file, "%d\n", room->enemies[z]->chr);
+                }
+
+                // normal_doors
+                fprintf(player_file, "%d\n", room->normal_doors_num);
+                for(int z = 0; z < room->normal_doors_num; z++) {
+                    fprintf(player_file, "%d\n", room->normal_doors[z].location.y);
+                    fprintf(player_file, "%d\n", room->normal_doors[z].location.x);
+                }
+
+                // secret_doors
+                fprintf(player_file, "%d\n", room->secret_doors_num);
+                for(int z = 0; z < room->secret_doors_num; z++) {
+                    fprintf(player_file, "%d\n", room->secret_doors[z].location.y);
+                    fprintf(player_file, "%d\n", room->secret_doors[z].location.x);
+                }
+            
+                // stair_case
+                if(room->staircase != NULL) {
+                    fprintf(player_file, "%d\n", room->staircase->location.y);
+                    fprintf(player_file, "%d\n", room->staircase->location.x);
+                }                
+                else {
+                    fprintf(player_file, "%d\n", 0);
+                }            
+
+                // master_key
+                if(room->master_key != NULL) {
+                    fprintf(player_file, "%d\n", room->master_key->location.y);
+                    fprintf(player_file, "%d\n", room->master_key->location.x);
+                }
+                else {
+                    fprintf(player_file, "%d\n", 0);
+                }
+            
+
+                //locked_door
+                // fprintf(player_file, "%d\n", &is);
+                if(room->locked_door != NULL) {
+                    fprintf(player_file, "%d\n", room->locked_door->location.y);
+                    fprintf(player_file, "%d\n", room->locked_door->location.x);
+                    fprintf(player_file, "%d\n", room->locked_door->is_visited);
+                    fprintf(player_file, "%d\n", room->locked_door->password_turn);
+                }
+                else {
+                    fprintf(player_file, "%d\n", 0);
+                }
+
+            }
+        }
+        
+        // game_health
+        fprintf(player_file, "%d\n", game->Health);
+        
+        // game_food
+        for(int i = 0; i < 3; i++) {
+            fprintf(player_file, "%d\n", game->food_num[i]);
+            for(int z = 0; z < game->food_num[i]; z++) {
+                if(game->foods[z][0] == NULL) {
+                    fprintf(player_file, "%d\n", 0);
+                    continue;
+                }
+
+                fprintf(player_file, "%d\n", game->foods[z][0]->location.y);
+                fprintf(player_file, "%d\n", game->foods[z][0]->location.x);
+                fprintf(player_file, "%d\n", game->foods[z][0]->type);
+                fprintf(player_file, "%d\n", game->foods[z][0]->time_passed);
+            }
+        } 
+
+        // game_gun
+        for(int i = 0; i < 5; i++) {
+            if(game->gun[i] == NULL) {
+                fprintf(player_file, "%d\n", 0);
+                continue;
+            }
+            
+
+            fprintf(player_file, "%d\n", game->gun[i]->location.y);
+            fprintf(player_file, "%d\n", game->gun[i]->location.x);
+            fprintf(player_file, "%d\n", game->gun[i]->type);
+            fprintf(player_file, "%d\n", game->gun[i]->damage);
+            fprintf(player_file, "%d\n", game->gun[i]->counter);
+            fprintf(player_file, "%d\n", game->gun[i]->distance);
+            fprintf(player_file, "%s\n", game->gun[i]->name);
+
+        }
+        
+        int ptr = -1;
+        for(int i = 0; i < 5; i++) {
+            if(game->gun[i] != NULL && game->current_gun->type == game->gun[i]->type) {
+                ptr = i;
+                break;
+            }
+        }
+        fprintf(player_file, "%d\n", ptr);
+
+        // game_spell
+        for(int i = 0; i < 3; i++) {
+            fprintf(player_file, "%d\n", game->spell_num[i]);
+            for(int z = 0; z < game->spell_num[i]; z++) {
+                if(game->spell[z][0] == NULL) {
+                    fprintf(player_file, "%d\n", 0);
+                    continue;
+                }
+
+                fprintf(player_file, "%d\n", game->spell[z][0]->location.y);
+                fprintf(player_file, "%d\n", game->spell[z][0]->location.x);
+                fprintf(player_file, "%d\n", game->spell[z][0]->type);
+            }
+        }
+
+        // game_master_key
+        fprintf(player_file, "%d\n", game->master_key_num);
+        for(int i = 0; i < game->master_key_num; i++) {
+            if(game->master_key[i] == NULL) {
+                fprintf(player_file, "%d\n", 0);
+                continue;
+            }
+
+            fprintf(player_file, "%d\n", game->master_key[i]->location.y);
+            fprintf(player_file, "%d\n", game->master_key[i]->location.x);
+        }
+
+        fprintf(player_file, "%d\n", game->total_gold);
+        fprintf(player_file, "%d\n", game->player_location.y);
+        fprintf(player_file, "%d\n", game->player_location.x);
+        fprintf(player_file, "%d\n", game->player_floor);
+        fprintf(player_file, "%d\n", game->player_room);
+    }
+    fclose(player_file);
 
 }
 
