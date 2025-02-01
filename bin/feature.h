@@ -121,14 +121,12 @@ typedef struct Staircase {
 typedef struct Secret_Door {
     Location location;
     wchar_t unicode;
-    bool is_visited;
 
 } Secret_Door;
 
 typedef struct Locked_Door {
     Location location;
     int password;
-    wchar_t unicode;
     bool is_visited;
     int password_turn;
     // show when locked with RED, when open with GREEN 
@@ -231,38 +229,43 @@ typedef struct Floor {
     bool floor_visit;
     char map[40][146];
     bool visit[40][146];
-    Room *Rooms;
     int room_num;
     int has_gold;
     int staircase_num;
     int master_key_num;
+    Room *Rooms;
 
 } Floor;
 
 
 typedef struct Game{
     char name[100];
-    Floor *floors;
-    Location player_location;
-    int player_floor;
-    int player_room;
 
+    Floor *floors;
     int floor_num;
+
     int Health;
     Food ***foods;
-    Gun **gun;
-    Spell ***spell;
     int *food_num;
-    int *spell_num;
+
+    Gun **gun;
     Gun *current_gun;
-    int total_gold;
+
+    Spell ***spell;
+    int *spell_num;
+    
     Master_Key **master_key;
     int master_key_num;
 
+    wchar_t player_unicode;
+    int total_gold;
     Music *music;
     enum Difficulty game_difficulty;
     int player_color;
-    wchar_t player_unicode;
+
+    Location player_location;
+    int player_floor;
+    int player_room;
 
     int time_power;
     bool power_up;

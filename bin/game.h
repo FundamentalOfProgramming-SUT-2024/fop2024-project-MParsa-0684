@@ -48,13 +48,13 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
 
     // Defines
     (*game)->floors = (Floor *) calloc(4, sizeof(Floor));
-    (*game)->floor_num = 0;
+    (*game)->floor_num = 4;
     
     (*game)->Health = 100;
     (*game)->total_gold = 0;
     
-    (*game)->foods = (Food ***) calloc(4, sizeof(Food **));
-    (*game)->food_num = (int *) calloc(4, sizeof(int));
+    (*game)->foods = (Food ***) calloc(3, sizeof(Food **));
+    (*game)->food_num = (int *) calloc(3, sizeof(int));
 
     (*game)->gun = (Gun **) calloc(5, sizeof(Gun *));
     (*game)->gun[0] = (Gun *) calloc(1, sizeof(Gun));

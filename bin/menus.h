@@ -24,6 +24,7 @@ void guest_login();
 void official_login();
 int check_login(char *usern, char *passw);
 void player_menu();
+void save_game();
 
 // Main menu of game
 void main_menu() {
@@ -215,7 +216,7 @@ void create_player() {
     player->music = (Music *) malloc(sizeof(Music));
     strcpy(player->music->music_path, "../music/05 Aen Seidhe.mp3");
     player->time_experience = time(NULL);
-    fprintf(player_file, "%s\n%s\n%s\n%d\n%d\n%d\n%ld\n%d\n%d\n%s\n", player->username, player->password, player->email, player->total_score, player->total_gold, player->num_finished, player->time_experience, player->game_difficulty, player->color, player->music->music_path);
+    fprintf(player_file, "%s\n%s\n%s\n%d\n%d\n%d\n%ld\n%d\n%d\n%s\n%s\n", player->username, player->password, player->email, player->total_score, player->total_gold, player->num_finished, player->time_experience, player->game_difficulty, player->color, player->music->music_path, player->game);
     fclose(player_file);
 
     //adding new details
@@ -459,9 +460,396 @@ void official_login() {
     player->music = (Music *) malloc(sizeof(Music));
     fgets(player->music->music_path, 100, player_file);
     delete_enter(player->music->music_path);
-    fclose(player_file);
-    // adding other arguments to player
+    char g[100];
+    fscanf(player_file, "%s", g);
+    if(strcmp(g, "(null)") == 0) {
+        player->game = NULL;    
+    }
+    else {
+        player->game = (Game *) calloc(1, sizeof(Game));
+        Game *game = player->game;
+        // game_name
+        // fscanf(player_file, "%s", game->name);
+        strcpy(game->name, g);
+        
+        
+        // game_floors_calloc
+        fscanf(player_file, "%d", &game->floor_num);
+        game->floors = (Floor *) calloc(game->floor_num, sizeof(Floor));
+        for(int i = 0; i < game->floor_num; i++) {
+            fscanf(player_file, "%d\n", &game->floors[i].floor_visit);
+            for(int ii = 0; ii < 40; ii++) {
+                for(int jj = 0; jj < 146; jj++) 
+                    fscanf(player_file, "%c", &game->floors[i].map[ii][jj]);
+                fscanf(player_file, "\n");
+            }
 
+            for(int ii = 0; ii < 40; ii++) {
+                for(int jj = 0; jj < 146; jj++) 
+                    fscanf(player_file, "%d", &game->floors[i].visit[ii][jj]);
+                // fscanf(player_file, "\n");
+            }
+
+            fscanf(player_file, "%d", &game->floors[i].room_num);
+            fscanf(player_file, "%d", &game->floors[i].has_gold);
+            fscanf(player_file, "%d", &game->floors[i].staircase_num);
+            fscanf(player_file, "%d", &game->floors[i].master_key_num);
+
+            for(int j = 0; j < game->floors[i].room_num; j++) {
+                Room *room = &game->floors[i].Rooms[j];
+                fscanf(player_file, "%d", &room->start.y);
+                fscanf(player_file, "%d", &room->start.x);
+                fscanf(player_file, "%d", &room->size.y);
+                fscanf(player_file, "%d", &room->size.x);
+                fscanf(player_file, "%d", &room->type);
+                int is;
+
+                // foods
+                fscanf(player_file, "%d", &room->food_num);
+                room->foods = (Food **) calloc(room->food_num, sizeof(Food *));
+                for(int z = 0; z < room->food_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->foods[z] = (Food *) calloc(1, sizeof(Food));
+                    room->foods[z]->location.y = is;
+                    // fscanf(player_file, "%d", &);
+                    fscanf(player_file, "%d", &room->foods[z]->location.x);
+                    fscanf(player_file, "%d", &room->foods[z]->type);
+                    fscanf(player_file, "%d", &room->foods[z]->time_passed);
+                    switch(room->foods[z]->type) {
+                        case Ordinary:
+                            room->foods[z]->unicode = 0x0001F34E;
+                            break;
+                        case Excellent:
+                            room->foods[z]->unicode = 0x0001F370;
+                            break;
+                        case Magical:
+                            room->foods[z]->unicode = 0x0001F347;
+                            break;
+                        case Toxic:
+                            // 1F344
+                            //unicode
+                            break;
+                    }
+                }
+
+                // golds
+                fscanf(player_file, "%d", &room->gold_num);
+                room->golds = (Gold **) calloc(room->gold_num, sizeof(Gold *));
+                for(int z = 0; z < room->gold_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->golds[z] = (Gold *) calloc(1, sizeof(Gold));
+                    room->golds[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->golds[z]->location.x);
+                    fscanf(player_file, "%d", &room->golds[z]->type);
+                    switch(room->golds[z]->type) {
+                        case Regular:
+                            room->golds[z]->unicode = 0x0001F4B0;
+                            break;
+                        case Black:
+                            room->golds[z]->unicode = 0x0001F6E2;
+                            break;
+                    }
+                }
+            
+                // guns
+                fscanf(player_file, "%d", &room->gun_num);
+                room->guns = (Gun **) calloc(room->gun_num, sizeof(Gun *));
+                for(int z = 0; z < room->gun_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->guns[z] = (Gun *) calloc(1, sizeof(Gun));
+                    room->guns[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->guns[z]->location.x);
+                    fscanf(player_file, "%d", &room->guns[z]->type);
+                    fscanf(player_file, "%d", &room->guns[z]->damage);
+                    fscanf(player_file, "%d", &room->guns[z]->counter);
+                    fscanf(player_file, "%d", &room->guns[z]->distance);
+                    fscanf(player_file, "%s", room->guns[z]->name);
+                    switch(room->guns[z]->type) {
+                        case Mace:
+                            room->guns[z]->unicode = 0x0001F531;
+                            break;
+                        case Dagger:
+                            room->guns[z]->unicode = 0x0001F528;
+                            break;
+                        case Magic_Wand:
+                            room->guns[z]->unicode = 0x0001F31F;
+                            break;
+                        case Normal_Arrow:
+                            room->guns[z]->unicode = 0x0001F3F9;
+                            break;
+                        case Sword:
+                            room->guns[z]->unicode = 0x0001F5E1;
+                            break;
+                    }
+
+                }
+            
+                //  spell
+                fscanf(player_file, "%d", &room->spell_num);
+                room->spells = (Spell **) calloc(room->spell_num, sizeof(Spell *));
+                for(int z = 0; z < room->spell_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->spells[z] = (Spell *) calloc(1, sizeof(Spell));
+                    room->spells[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->spells[z]->location.x);
+                    fscanf(player_file, "%d", &room->spells[z]->type);
+                    switch(room->spells[z]->type) {
+                        case Health:
+                            room->spells[z]->unicode = 0x0001F52E;
+                            break;
+                        case Speed:
+                            room->spells[z]->unicode = 0x0001F680;
+                            break;
+                        case Damage:
+                            room->spells[z]->unicode = 0x0001F4A5;
+                            break;
+                    }   
+                }
+            
+                // trap
+                fscanf(player_file, "%d", &room->trap_num);
+                room->traps = (Trap **) calloc(room->trap_num, sizeof(Trap *));
+                for(int z = 0; z < room->trap_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->traps[z] = (Trap *) calloc(1, sizeof(Trap));
+                    room->traps[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->traps[z]->location.x); 
+                }
+            
+                // enemy
+                fscanf(player_file, "%d", &room->enemy_num);
+                room->enemies = (Enemy **) calloc(room->enemy_num, sizeof(Enemy *));
+                for(int z = 0; z < room->enemy_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->enemies[z] = (Enemy *) calloc(1, sizeof(Enemy));
+                    room->enemies[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->enemies[z]->location.x);
+                    fscanf(player_file, "%d", &room->enemies[z]->type);
+                    fscanf(player_file, "%d", &room->enemies[z]->damage);
+                    fscanf(player_file, "%d", &room->enemies[z]->health);
+                    fscanf(player_file, "%d", &room->enemies[z]->following);
+                    fscanf(player_file, "%d", &room->enemies[z]->is_moving);
+                    fscanf(player_file, "%d", &room->enemies[z]->chr);
+                    switch(room->enemies[z]->type) {
+                        case Deamon:
+                            room->enemies[z]->unicode = 0x0001F608;
+                            break;
+                        case Monster:
+                            room->enemies[z]->unicode = 0x0001F432;
+                            break;
+                        case Giant:
+                            room->enemies[z]->unicode = 0x0001F47B;
+                            break;
+                        case Snake:
+                            room->enemies[z]->unicode = 0x0001F40D;
+                            break;
+                        case Undeed:
+                            room->enemies[z]->unicode = 0x0001F409;
+                            break;
+                    }
+
+                }
+
+                // normal_doors
+                fscanf(player_file, "%d", &room->normal_doors_num);
+                room->normal_doors = (Normal_Door *) calloc(room->normal_doors_num, sizeof(Normal_Door));
+                for(int z = 0; z < room->normal_doors_num; z++) {
+                    fscanf(player_file, "%d", &room->normal_doors[z].location.y);
+                    fscanf(player_file, "%d", &room->normal_doors[z].location.x);
+                }
+
+                // secret_doors
+                fscanf(player_file, "%d", &room->secret_doors_num);
+                room->secret_doors = (Secret_Door *) calloc(room->secret_doors_num, sizeof(Secret_Door));
+                for(int z = 0; z < room->secret_doors_num; z++) {
+                    fscanf(player_file, "%d", &room->secret_doors[z].location.y);
+                    fscanf(player_file, "%d", &room->secret_doors[z].location.x);
+                }
+            
+                // stair_case
+                fscanf(player_file, "%d", &is);
+                if(is != 0) {
+                    room->staircase = (Staircase *) calloc(1, sizeof(Staircase));
+                    fscanf(player_file, "%d", &room->staircase->location.y);
+                    fscanf(player_file, "%d", &room->staircase->location.x);
+                }                
+            
+                // master_key
+                fscanf(player_file, "%d", &is);
+                if(is != 0) {
+                    room->master_key = (Master_Key *) calloc(1, sizeof(Master_Key));
+                    fscanf(player_file, "%d", &room->master_key->location.y);
+                    fscanf(player_file, "%d", &room->master_key->location.x);
+                }
+            
+
+                //locked_door
+                fscanf(player_file, "%d", &is);
+                if(is != 0) {
+                    room->locked_door = (Locked_Door *) calloc(1, sizeof(Locked_Door));
+                    fscanf(player_file, "%d", &room->locked_door->location.y);
+                    fscanf(player_file, "%d", &room->locked_door->location.x);
+                    room->locked_door->password = -1;
+                    fscanf(player_file, "%d", &room->locked_door->is_visited);
+                    fscanf(player_file, "%d", &room->locked_door->password_turn);
+                }
+            }
+        }
+        
+        // game_health
+        int is;
+        fscanf(player_file, "%d", &game->Health);
+        
+        // game_food
+        game->foods = (Food ***) calloc(3, sizeof(Food **));
+        game->food_num = (int *) calloc(3, sizeof(int));
+        for(int i = 0; i < 3; i++) {
+            fscanf(player_file, "%d", &game->food_num[i]);
+            game->foods[i] = (Food **)calloc(game->food_num[i], sizeof(Food *));
+            for(int z = 0; z < game->food_num[i]; z++) {
+                fscanf(player_file, "%d", &is);
+                if(is == 0)
+                    continue;
+
+                game->foods[z] = (Food **) calloc(1, sizeof(Food *));
+                game->foods[z][0] = (Food *) calloc(1, sizeof(Food));
+                game->foods[z][0]->location.y = is;
+                // fscanf(player_file, "%d", &);
+                fscanf(player_file, "%d", &game->foods[z][0]->location.x);
+                fscanf(player_file, "%d", &game->foods[z][0]->type);
+                fscanf(player_file, "%d", &game->foods[z][0]->time_passed);
+                switch(game->foods[z][0]->type) {
+                    case Ordinary:
+                        game->foods[z][0]->unicode = 0x0001F34E;
+                        break;
+                    case Excellent:
+                        game->foods[z][0]->unicode = 0x0001F370;
+                        break;
+                    case Magical:
+                        game->foods[z][0]->unicode = 0x0001F347;
+                        break;
+                    case Toxic:
+                        // 1F344
+                        //unicode
+                        break;
+                }
+            }
+        } 
+
+        // game_gun
+        game->gun = (Gun **) calloc(5, sizeof(Gun *));
+        for(int i = 0; i < 5; i++) {
+            fscanf(player_file, "%d", &is);
+            if(is == 0)
+                continue;
+            
+            game->gun[i] = (Gun *) calloc(1, sizeof(Gun));
+            game->gun[i]->location.y = is;
+            fscanf(player_file, "%d", &game->gun[i]->location.x);
+            fscanf(player_file, "%d", &game->gun[i]->type);
+            fscanf(player_file, "%d", &game->gun[i]->damage);
+            fscanf(player_file, "%d", &game->gun[i]->counter);
+            fscanf(player_file, "%d", &game->gun[i]->distance);
+            fscanf(player_file, "%s", game->gun[i]->name);
+            switch(game->gun[i]->type) {
+                case Mace:
+                    game->gun[i]->unicode = 0x0001F531;
+                    break;
+                case Dagger:
+                    game->gun[i]->unicode = 0x0001F528;
+                    break;
+                case Magic_Wand:
+                    game->gun[i]->unicode = 0x0001F31F;
+                    break;
+                case Normal_Arrow:
+                    game->gun[i]->unicode = 0x0001F3F9;
+                    break;
+                case Sword:
+                    game->gun[i]->unicode = 0x0001F5E1;
+                    break;
+            }
+
+        }
+        fscanf(player_file, "%d", &is);
+        game->current_gun = game->gun[is];
+
+        // game_spell
+        game->spell = (Spell ***) calloc(3, sizeof(Spell **));
+        game->spell_num = (int *) calloc(3, sizeof(int));
+        for(int i = 0; i < 3; i++) {
+            fscanf(player_file, "%d", &game->spell_num[i]);
+            game->spell[i] = (Spell **) calloc(game->spell_num[i], sizeof(Spell *));
+            for(int z = 0; z < game->spell_num[i]; z++) {
+                fscanf(player_file, "%d", &is);
+                if(is == 0)
+                    continue;
+
+                game->spell[z] = (Spell **) calloc(1, sizeof(Spell *));
+                game->spell[z][0] = (Spell *) calloc(1, sizeof(Spell));
+                game->spell[z][0]->location.y = is;
+                fscanf(player_file, "%d", &game->spell[z][0]->location.x);
+                fscanf(player_file, "%d", &game->spell[z][0]->type);
+                switch(game->spell[z][0]->type) {
+                    case Health:
+                        game->spell[z][0]->unicode = 0x0001F52E;
+                        break;
+                    case Speed:
+                        game->spell[z][0]->unicode = 0x0001F680;
+                        break;
+                    case Damage:
+                        game->spell[z][0]->unicode = 0x0001F4A5;
+                        break;
+                }   
+            }
+        }
+
+        // game_master_key
+        fscanf(player_file, "%d", &game->master_key_num);
+        game->master_key = (Master_Key **) calloc(game->master_key_num, sizeof(Master_Key *));
+        for(int i = 0; i < game->master_key_num; i++) {
+            fscanf(player_file, "%d", &is);
+            if(is == 0)
+                continue;
+
+            game->master_key[i] =  (Master_Key *) calloc(1, sizeof(Master_Key));
+            game->master_key[i]->location.y = is;
+            fscanf(player_file, "%d", &game->master_key[i]->location.x);
+        }
+
+        game->player_unicode = 0x0001F47E;
+        fscanf(player_file, "%d", &game->total_gold);
+        game->music = (Music *) calloc(1, sizeof(Music));
+        strcpy(game->music->music_path, player->music->music_path);
+        game->game_difficulty = player->game_difficulty;
+        game->player_color = player->color; 
+
+        fscanf(player_file, "%d", &game->player_location.y);
+        fscanf(player_file, "%d", &game->player_location.x);
+        fscanf(player_file, "%d", &game->player_floor);
+        fscanf(player_file, "%d", &game->player_room);
+
+        game->time_power = -1;
+    }
+
+    fclose(player_file);
     player_menu();
 
     
@@ -492,6 +880,396 @@ void guest_login() {
     player->music = (Music *) malloc(sizeof(Music));
     fscanf(player_file, "%s", player->music->music_path);
     // delete_enter(player->music->music_path);
+    char g[100];
+    fscanf(player_file, "%s", g);
+    if(strcmp(g, "(null)") == 0) {
+        player->game = NULL;    
+    }
+    else {
+        player->game = (Game *) calloc(1, sizeof(Game));
+        Game *game = player->game;
+        // game_name
+        // fscanf(player_file, "%s", game->name);
+        strcpy(game->name, g);
+        
+        
+        // game_floors_calloc
+        fscanf(player_file, "%d", &game->floor_num);
+        game->floors = (Floor *) calloc(game->floor_num, sizeof(Floor));
+        for(int i = 0; i < game->floor_num; i++) {
+            fscanf(player_file, "%d\n", &game->floors[i].floor_visit);
+            for(int ii = 0; ii < 40; ii++) {
+                for(int jj = 0; jj < 146; jj++) 
+                    fscanf(player_file, "%c", &game->floors[i].map[ii][jj]);
+                fscanf(player_file, "\n");
+            }
+
+            for(int ii = 0; ii < 40; ii++) {
+                for(int jj = 0; jj < 146; jj++) 
+                    fscanf(player_file, "%d", &game->floors[i].visit[ii][jj]);
+                // fscanf(player_file, "\n");
+            }
+
+            fscanf(player_file, "%d", &game->floors[i].room_num);
+            fscanf(player_file, "%d", &game->floors[i].has_gold);
+            fscanf(player_file, "%d", &game->floors[i].staircase_num);
+            fscanf(player_file, "%d", &game->floors[i].master_key_num);
+
+            for(int j = 0; j < game->floors[i].room_num; j++) {
+                Room *room = &game->floors[i].Rooms[j];
+                fscanf(player_file, "%d", &room->start.y);
+                fscanf(player_file, "%d", &room->start.x);
+                fscanf(player_file, "%d", &room->size.y);
+                fscanf(player_file, "%d", &room->size.x);
+                fscanf(player_file, "%d", &room->type);
+                int is;
+
+                // foods
+                fscanf(player_file, "%d", &room->food_num);
+                room->foods = (Food **) calloc(room->food_num, sizeof(Food *));
+                for(int z = 0; z < room->food_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->foods[z] = (Food *) calloc(1, sizeof(Food));
+                    room->foods[z]->location.y = is;
+                    // fscanf(player_file, "%d", &);
+                    fscanf(player_file, "%d", &room->foods[z]->location.x);
+                    fscanf(player_file, "%d", &room->foods[z]->type);
+                    fscanf(player_file, "%d", &room->foods[z]->time_passed);
+                    switch(room->foods[z]->type) {
+                        case Ordinary:
+                            room->foods[z]->unicode = 0x0001F34E;
+                            break;
+                        case Excellent:
+                            room->foods[z]->unicode = 0x0001F370;
+                            break;
+                        case Magical:
+                            room->foods[z]->unicode = 0x0001F347;
+                            break;
+                        case Toxic:
+                            // 1F344
+                            //unicode
+                            break;
+                    }
+                }
+
+                // golds
+                fscanf(player_file, "%d", &room->gold_num);
+                room->golds = (Gold **) calloc(room->gold_num, sizeof(Gold *));
+                for(int z = 0; z < room->gold_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->golds[z] = (Gold *) calloc(1, sizeof(Gold));
+                    room->golds[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->golds[z]->location.x);
+                    fscanf(player_file, "%d", &room->golds[z]->type);
+                    switch(room->golds[z]->type) {
+                        case Regular:
+                            room->golds[z]->unicode = 0x0001F4B0;
+                            break;
+                        case Black:
+                            room->golds[z]->unicode = 0x0001F6E2;
+                            break;
+                    }
+                }
+            
+                // guns
+                fscanf(player_file, "%d", &room->gun_num);
+                room->guns = (Gun **) calloc(room->gun_num, sizeof(Gun *));
+                for(int z = 0; z < room->gun_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->guns[z] = (Gun *) calloc(1, sizeof(Gun));
+                    room->guns[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->guns[z]->location.x);
+                    fscanf(player_file, "%d", &room->guns[z]->type);
+                    fscanf(player_file, "%d", &room->guns[z]->damage);
+                    fscanf(player_file, "%d", &room->guns[z]->counter);
+                    fscanf(player_file, "%d", &room->guns[z]->distance);
+                    fscanf(player_file, "%s", room->guns[z]->name);
+                    switch(room->guns[z]->type) {
+                        case Mace:
+                            room->guns[z]->unicode = 0x0001F531;
+                            break;
+                        case Dagger:
+                            room->guns[z]->unicode = 0x0001F528;
+                            break;
+                        case Magic_Wand:
+                            room->guns[z]->unicode = 0x0001F31F;
+                            break;
+                        case Normal_Arrow:
+                            room->guns[z]->unicode = 0x0001F3F9;
+                            break;
+                        case Sword:
+                            room->guns[z]->unicode = 0x0001F5E1;
+                            break;
+                    }
+
+                }
+            
+                //  spell
+                fscanf(player_file, "%d", &room->spell_num);
+                room->spells = (Spell **) calloc(room->spell_num, sizeof(Spell *));
+                for(int z = 0; z < room->spell_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->spells[z] = (Spell *) calloc(1, sizeof(Spell));
+                    room->spells[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->spells[z]->location.x);
+                    fscanf(player_file, "%d", &room->spells[z]->type);
+                    switch(room->spells[z]->type) {
+                        case Health:
+                            room->spells[z]->unicode = 0x0001F52E;
+                            break;
+                        case Speed:
+                            room->spells[z]->unicode = 0x0001F680;
+                            break;
+                        case Damage:
+                            room->spells[z]->unicode = 0x0001F4A5;
+                            break;
+                    }   
+                }
+            
+                // trap
+                fscanf(player_file, "%d", &room->trap_num);
+                room->traps = (Trap **) calloc(room->trap_num, sizeof(Trap *));
+                for(int z = 0; z < room->trap_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->traps[z] = (Trap *) calloc(1, sizeof(Trap));
+                    room->traps[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->traps[z]->location.x); 
+                }
+            
+                // enemy
+                fscanf(player_file, "%d", &room->enemy_num);
+                room->enemies = (Enemy **) calloc(room->enemy_num, sizeof(Enemy *));
+                for(int z = 0; z < room->enemy_num; z++) {
+                    fscanf(player_file, "%d", &is);
+                    if(is == 0)
+                        continue;
+
+                    room->enemies[z] = (Enemy *) calloc(1, sizeof(Enemy));
+                    room->enemies[z]->location.y = is;
+                    fscanf(player_file, "%d", &room->enemies[z]->location.x);
+                    fscanf(player_file, "%d", &room->enemies[z]->type);
+                    fscanf(player_file, "%d", &room->enemies[z]->damage);
+                    fscanf(player_file, "%d", &room->enemies[z]->health);
+                    fscanf(player_file, "%d", &room->enemies[z]->following);
+                    fscanf(player_file, "%d", &room->enemies[z]->is_moving);
+                    fscanf(player_file, "%d", &room->enemies[z]->chr);
+                    switch(room->enemies[z]->type) {
+                        case Deamon:
+                            room->enemies[z]->unicode = 0x0001F608;
+                            break;
+                        case Monster:
+                            room->enemies[z]->unicode = 0x0001F432;
+                            break;
+                        case Giant:
+                            room->enemies[z]->unicode = 0x0001F47B;
+                            break;
+                        case Snake:
+                            room->enemies[z]->unicode = 0x0001F40D;
+                            break;
+                        case Undeed:
+                            room->enemies[z]->unicode = 0x0001F409;
+                            break;
+                    }
+
+                }
+
+                // normal_doors
+                fscanf(player_file, "%d", &room->normal_doors_num);
+                room->normal_doors = (Normal_Door *) calloc(room->normal_doors_num, sizeof(Normal_Door));
+                for(int z = 0; z < room->normal_doors_num; z++) {
+                    fscanf(player_file, "%d", &room->normal_doors[z].location.y);
+                    fscanf(player_file, "%d", &room->normal_doors[z].location.x);
+                }
+
+                // secret_doors
+                fscanf(player_file, "%d", &room->secret_doors_num);
+                room->secret_doors = (Secret_Door *) calloc(room->secret_doors_num, sizeof(Secret_Door));
+                for(int z = 0; z < room->secret_doors_num; z++) {
+                    fscanf(player_file, "%d", &room->secret_doors[z].location.y);
+                    fscanf(player_file, "%d", &room->secret_doors[z].location.x);
+                }
+            
+                // stair_case
+                fscanf(player_file, "%d", &is);
+                if(is != 0) {
+                    room->staircase = (Staircase *) calloc(1, sizeof(Staircase));
+                    fscanf(player_file, "%d", &room->staircase->location.y);
+                    fscanf(player_file, "%d", &room->staircase->location.x);
+                }                
+            
+                // master_key
+                fscanf(player_file, "%d", &is);
+                if(is != 0) {
+                    room->master_key = (Master_Key *) calloc(1, sizeof(Master_Key));
+                    fscanf(player_file, "%d", &room->master_key->location.y);
+                    fscanf(player_file, "%d", &room->master_key->location.x);
+                }
+            
+
+                //locked_door
+                fscanf(player_file, "%d", &is);
+                if(is != 0) {
+                    room->locked_door = (Locked_Door *) calloc(1, sizeof(Locked_Door));
+                    fscanf(player_file, "%d", &room->locked_door->location.y);
+                    fscanf(player_file, "%d", &room->locked_door->location.x);
+                    room->locked_door->password = -1;
+                    fscanf(player_file, "%d", &room->locked_door->is_visited);
+                    fscanf(player_file, "%d", &room->locked_door->password_turn);
+                }
+            }
+        }
+        
+        // game_health
+        int is;
+        fscanf(player_file, "%d", &game->Health);
+        
+        // game_food
+        game->foods = (Food ***) calloc(3, sizeof(Food **));
+        game->food_num = (int *) calloc(3, sizeof(int));
+        for(int i = 0; i < 3; i++) {
+            fscanf(player_file, "%d", &game->food_num[i]);
+            game->foods[i] = (Food **)calloc(game->food_num[i], sizeof(Food *));
+            for(int z = 0; z < game->food_num[i]; z++) {
+                fscanf(player_file, "%d", &is);
+                if(is == 0)
+                    continue;
+
+                game->foods[z] = (Food **) calloc(1, sizeof(Food *));
+                game->foods[z][0] = (Food *) calloc(1, sizeof(Food));
+                game->foods[z][0]->location.y = is;
+                // fscanf(player_file, "%d", &);
+                fscanf(player_file, "%d", &game->foods[z][0]->location.x);
+                fscanf(player_file, "%d", &game->foods[z][0]->type);
+                fscanf(player_file, "%d", &game->foods[z][0]->time_passed);
+                switch(game->foods[z][0]->type) {
+                    case Ordinary:
+                        game->foods[z][0]->unicode = 0x0001F34E;
+                        break;
+                    case Excellent:
+                        game->foods[z][0]->unicode = 0x0001F370;
+                        break;
+                    case Magical:
+                        game->foods[z][0]->unicode = 0x0001F347;
+                        break;
+                    case Toxic:
+                        // 1F344
+                        //unicode
+                        break;
+                }
+            }
+        } 
+
+        // game_gun
+        game->gun = (Gun **) calloc(5, sizeof(Gun *));
+        for(int i = 0; i < 5; i++) {
+            fscanf(player_file, "%d", &is);
+            if(is == 0)
+                continue;
+            
+            game->gun[i] = (Gun *) calloc(1, sizeof(Gun));
+            game->gun[i]->location.y = is;
+            fscanf(player_file, "%d", &game->gun[i]->location.x);
+            fscanf(player_file, "%d", &game->gun[i]->type);
+            fscanf(player_file, "%d", &game->gun[i]->damage);
+            fscanf(player_file, "%d", &game->gun[i]->counter);
+            fscanf(player_file, "%d", &game->gun[i]->distance);
+            fscanf(player_file, "%s", game->gun[i]->name);
+            switch(game->gun[i]->type) {
+                case Mace:
+                    game->gun[i]->unicode = 0x0001F531;
+                    break;
+                case Dagger:
+                    game->gun[i]->unicode = 0x0001F528;
+                    break;
+                case Magic_Wand:
+                    game->gun[i]->unicode = 0x0001F31F;
+                    break;
+                case Normal_Arrow:
+                    game->gun[i]->unicode = 0x0001F3F9;
+                    break;
+                case Sword:
+                    game->gun[i]->unicode = 0x0001F5E1;
+                    break;
+            }
+
+        }
+        fscanf(player_file, "%d", &is);
+        game->current_gun = game->gun[is];
+
+        // game_spell
+        game->spell = (Spell ***) calloc(3, sizeof(Spell **));
+        game->spell_num = (int *) calloc(3, sizeof(int));
+        for(int i = 0; i < 3; i++) {
+            fscanf(player_file, "%d", &game->spell_num[i]);
+            game->spell[i] = (Spell **) calloc(game->spell_num[i], sizeof(Spell *));
+            for(int z = 0; z < game->spell_num[i]; z++) {
+                fscanf(player_file, "%d", &is);
+                if(is == 0)
+                    continue;
+
+                game->spell[z] = (Spell **) calloc(1, sizeof(Spell *));
+                game->spell[z][0] = (Spell *) calloc(1, sizeof(Spell));
+                game->spell[z][0]->location.y = is;
+                fscanf(player_file, "%d", &game->spell[z][0]->location.x);
+                fscanf(player_file, "%d", &game->spell[z][0]->type);
+                switch(game->spell[z][0]->type) {
+                    case Health:
+                        game->spell[z][0]->unicode = 0x0001F52E;
+                        break;
+                    case Speed:
+                        game->spell[z][0]->unicode = 0x0001F680;
+                        break;
+                    case Damage:
+                        game->spell[z][0]->unicode = 0x0001F4A5;
+                        break;
+                }   
+            }
+        }
+
+        // game_master_key
+        fscanf(player_file, "%d", &game->master_key_num);
+        game->master_key = (Master_Key **) calloc(game->master_key_num, sizeof(Master_Key *));
+        for(int i = 0; i < game->master_key_num; i++) {
+            fscanf(player_file, "%d", &is);
+            if(is == 0)
+                continue;
+
+            game->master_key[i] =  (Master_Key *) calloc(1, sizeof(Master_Key));
+            game->master_key[i]->location.y = is;
+            fscanf(player_file, "%d", &game->master_key[i]->location.x);
+        }
+
+        game->player_unicode = 0x0001F47E;
+        fscanf(player_file, "%d", &game->total_gold);
+        game->music = (Music *) calloc(1, sizeof(Music));
+        strcpy(game->music->music_path, player->music->music_path);
+        game->game_difficulty = player->game_difficulty;
+        game->player_color = player->color; 
+
+        fscanf(player_file, "%d", &game->player_location.y);
+        fscanf(player_file, "%d", &game->player_location.x);
+        fscanf(player_file, "%d", &game->player_floor);
+        fscanf(player_file, "%d", &game->player_room);
+
+        game->time_power = -1;
+    }
+
+
     fclose(player_file);
     // adding other arguments to player
 
@@ -616,6 +1394,7 @@ void player_menu() {
         switch (cursor) {
             case KEY_ENTER:
                 if(location == 4) {
+                    save_game();
                     main_menu();
                 }
                 (* pmenus[location]) ();
@@ -623,11 +1402,15 @@ void player_menu() {
 
             case KEY_DOWN:
                 location = (location + 1) % 5;
+                if(location == 1 && player->game == NULL)
+                    location++;
                 break;
 
             case KEY_UP:
                 location = (location - 1) % 5;
                 location = (location + 5) % 5;
+                if(location == 1 && player->game == NULL)
+                    location--;
                 break;
         }
 
@@ -662,6 +1445,9 @@ void player_menu() {
     }
 }
 
+void save_game() {
+
+}
 
 /*
 
