@@ -13,10 +13,15 @@
 #include <locale.h>
 #include <wchar.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "ui.h"
 #include "menus.h"
 #include "feature.h"
+
+pid_t afplay_pid = -1;
+bool music_changed = false;
+pthread_t sound_thread;
 
 
 void play_game(Game *game);
@@ -683,8 +688,9 @@ void play_game(Game *game) {
     // srand(time(NULL));
 
     // Music
-    // pthread_t sound_thread;
-    // pthread_create(&sound_thread, NULL, play_sound, (void *) game->music->music_path);
+    if(strcmp(game->music->music_path, "NULL") != 0) {
+        pthread_create(&sound_thread, NULL, play_sound, (void *) game->music->music_path);
+    }
 
     // facets
     bool flag = true;
@@ -1157,6 +1163,26 @@ void play_game(Game *game) {
                             }
                         }
                     }
+
+                    if(game->floors[game->player_floor].Rooms[game->player_room].type == Enchant) {
+                        music_changed = true;
+                        kill(afplay_pid, SIGTERM);
+                        pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/06CommandingtheFury.mp3");
+                    }
+                    else if(game->floors[game->player_floor].Rooms[game->player_room].type == Nightmare) {
+                        music_changed = true;
+                        kill(afplay_pid, SIGTERM);
+                        pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/12TheNightingale.mp3");
+                    }
+                    else {
+                        if(music_changed == true) {
+                            kill(afplay_pid, SIGTERM);
+                            if(strcmp(game->music->music_path, "NULL") != 0) {
+                                pthread_create(&sound_thread, NULL, play_sound, (void *) game->music->music_path);
+                            }
+                            music_changed = false;
+                        }
+                    }
                 }
                 else
                     beep();
@@ -1168,6 +1194,26 @@ void play_game(Game *game) {
                     game->player_floor--;
                     game->player_location = game->floors[game->player_floor].Rooms[game->floors[game->player_floor].staircase_num].staircase->location;
                     game->player_room = game->floors[game->player_floor].staircase_num;
+
+                    if(game->floors[game->player_floor].Rooms[game->player_room].type == Enchant) {
+                        music_changed = true;
+                        kill(afplay_pid, SIGTERM);
+                        pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/06CommandingtheFury.mp3");
+                    }
+                    else if(game->floors[game->player_floor].Rooms[game->player_room].type == Nightmare) {
+                        music_changed = true;
+                        kill(afplay_pid, SIGTERM);
+                        pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/12TheNightingale.mp3");
+                    }
+                    else {
+                        if(music_changed == true) {
+                            kill(afplay_pid, SIGTERM);
+                            if(strcmp(game->music->music_path, "NULL") != 0) {
+                                pthread_create(&sound_thread, NULL, play_sound, (void *) game->music->music_path);
+                            }
+                            music_changed = false;
+                        }
+                    }
                 }
                 else
                     beep();
@@ -1235,8 +1281,16 @@ void play_game(Game *game) {
                     }
 
                     // set player_room in road to -1
-                    if(game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '+' || game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '@' || game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '*')
+                    if(game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '+' || game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '@' || game->floors[game->player_floor].map[game->player_location.y - directions[dir][1]][game->player_location.x - directions[dir][0]] == '*') {
                         game->player_room = -1;
+                        if(music_changed == true) {
+                            kill(afplay_pid, SIGTERM);
+                            if(strcmp(game->music->music_path, "NULL") != 0) {
+                                pthread_create(&sound_thread, NULL, play_sound, (void *) game->music->music_path);
+                            }
+                            music_changed = false;
+                        }
+                    }
                     break;
 
                 // Normal doors
@@ -1250,9 +1304,19 @@ void play_game(Game *game) {
                                 }
                             }
                         }
+                        refresh_enemy_following(game);
+                        if(game->floors[game->player_floor].Rooms[game->player_room].type == Enchant) {
+                            music_changed = true;
+                            kill(afplay_pid, SIGTERM);
+                            pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/06CommandingtheFury.mp3");
+                        }
+                        else if(game->floors[game->player_floor].Rooms[game->player_room].type == Nightmare) {
+                            music_changed = true;
+                            kill(afplay_pid, SIGTERM);
+                            pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/12TheNightingale.mp3");
+                        }
                     }
 
-                    refresh_enemy_following(game);
                     // show new room
                     temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
                     for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
@@ -1273,9 +1337,19 @@ void play_game(Game *game) {
                                 }
                             }
                         }
+                        refresh_enemy_following(game);
+                        if(game->floors[game->player_floor].Rooms[game->player_room].type == Enchant) {
+                            music_changed = true;
+                            kill(afplay_pid, SIGTERM);
+                            pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/06CommandingtheFury.mp3");
+                        }
+                        else if(game->floors[game->player_floor].Rooms[game->player_room].type == Nightmare) {
+                            music_changed = true;
+                            kill(afplay_pid, SIGTERM);
+                            pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/12TheNightingale.mp3");
+                        }
                     }
 
-                    refresh_enemy_following(game);
                     // show new room
                     temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
                     for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
@@ -1295,9 +1369,19 @@ void play_game(Game *game) {
                                     game->player_room = iii;
                                 }
                             }
+                            refresh_enemy_following(game);
+                            if(game->floors[game->player_floor].Rooms[game->player_room].type == Enchant) {
+                                music_changed = true;
+                                kill(afplay_pid, SIGTERM);
+                                pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/06CommandingtheFury.mp3");
+                            }
+                            else if(game->floors[game->player_floor].Rooms[game->player_room].type == Nightmare) {
+                                music_changed = true;
+                                kill(afplay_pid, SIGTERM);
+                                pthread_create(&sound_thread, NULL, play_sound, (void *) "../music/12TheNightingale.mp3");
+                            }
                         }
 
-                        refresh_enemy_following(game);
                         // show new room
                         temp_room = &game->floors[game->player_floor].Rooms[game->player_room]; 
                         for(int iii = temp_room->start.y; iii < temp_room->start.y + temp_room->size.y; iii++) {
@@ -1510,6 +1594,10 @@ void play_game(Game *game) {
     }
 
     // Music end
+    if(strcmp(game->music->music_path, "NULL") != 0) {
+        kill(afplay_pid, SIGTERM);
+        afplay_pid = -1;
+    }
     // pthread_cancel(sound_thread); 
     // pthread_join(sound_thread, NULL); 
 
@@ -1746,8 +1834,8 @@ void *play_sound(void *arg) {
     const char *sound_file = (const char *)arg;
 
     // Fork a child process
-    pid_t pid = fork();
-    if (pid == 0) {
+    afplay_pid = fork();
+    if (afplay_pid == 0) {
         // Child process runs afplay
         execlp("afplay", "afplay", sound_file, (char *)NULL);
         perror("Error executing afplay"); // If execlp fails
@@ -1767,7 +1855,7 @@ void *play_sound(void *arg) {
 //     const char *sound_file = (const char *)arg;
 //     char command[256];
 
-//     snprintf(command, sizeof(command), "setsid afplay '%s' &", sound_file);
+//     snprintf(command, sizeof(command), "afplay '%s'", sound_file);
 
 //     while (1) {
 //         system(command);

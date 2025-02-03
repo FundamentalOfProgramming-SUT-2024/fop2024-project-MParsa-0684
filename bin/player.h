@@ -158,23 +158,33 @@ void score_table() {
             }
             // first player is red and bold
             if(start_table + i == 0) {
+                //Champion 
+                move(8 + i, 10);
                 attron(A_BOLD | COLOR_PAIR(4));
                 wchar_t gold = 0x0001F947;
                 printw("%lc", gold);
+                move(8 + i, 13);
+                addstr("1st");
                 // addstr("<G> ");
             }
             // second player is green
             if(start_table + i == 1) {
                 attron(A_BOLD | COLOR_PAIR(5));
+                move(8 + i, 10);
                 wchar_t silver = 0x0001F948;
                 printw("%lc", silver);
+                move(8 + i, 13);
+                addstr("2nd");
                 // addstr("<S> ");
             }
             // third player is yellow
             if(start_table + i == 2) {
                 attron(A_BOLD | COLOR_PAIR(6));
+                move(8 + i, 10);
                 wchar_t bronze = 0x0001F949;
                 printw("%lc", bronze);
+                move(8 + i, 13);
+                addstr("3rd");
                 // addstr("<B> ");
             }
             else 
