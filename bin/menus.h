@@ -27,6 +27,7 @@ int check_login(char *usern, char *passw);
 void player_menu();
 void save_game();
 void game_intro();
+void game_end();
 
 // Main menu of game
 void main_menu() {
@@ -36,17 +37,13 @@ void main_menu() {
     noecho();
     // cbreak();
     curs_set(FALSE);
-    setlocale(LC_ALL, "");
+    // setlocale(LC_ALL, "");
     refresh();
 
     // Page UI
     start_color();    
     clear_space();
 
-    bkgd(COLOR_PAIR(1));
-    
-    //Game_Intro
-    game_intro();
 
     // Header UI
     attron(A_BOLD | COLOR_PAIR(1));
@@ -102,6 +99,7 @@ void main_menu() {
         switch (cursor) {
             case KEY_ENTER:
                 if(location == 2) {
+                    game_end();
                     endwin();
                     exit(0);
                 }
@@ -1520,27 +1518,29 @@ void player_menu() {
 }
 
 void save_game() {
-    // unlink(player->file_path);
-    // char fl[200000];
-    // snprintf(fl, 1000, "%s\n", player->username);
-    // // delete_enter(player->username);
+    unlink(player->file_path);
+    char fl[200000];
+    snprintf(fl, 1000, "%s\n", player->username);
+    // delete_enter(player->username);
     
-    // snprintf(fl + strlen(fl), 1000, "%s\n", player->password);
-    // // delete_enter(player->password);
+    snprintf(fl + strlen(fl), 1000, "%s\n", player->password);
+    // delete_enter(player->password);
     
-    // snprintf(fl + strlen(fl), 1000, "%s\n", player->email);
-    // // delete_enter(player->email);
+    snprintf(fl + strlen(fl), 1000, "%s\n", player->email);
+    // delete_enter(player->email);
     
-    // snprintf(fl + strlen(fl), 1000, "%d\n", (player->total_score));
-    // snprintf(fl + strlen(fl), 1000, "%d\n", (player->total_gold));
-    // snprintf(fl + strlen(fl), 1000, "%d\n", (player->num_finished));
-    // snprintf(fl + strlen(fl), 1000, "%ld\n", (player->time_experience));
-    // snprintf(fl + strlen(fl), 1000, "%d\n", (player->game_difficulty));
-    // snprintf(fl + strlen(fl), 1000, "%d\n", (player->color));
-    // // player->music = (Music *) malloc(sizeof(Music));
-    // snprintf(fl + strlen(fl), 1000, "%s\n", player->music->music_path);
-    // // fclose(player_file);
-    // // delete_enter(player->music->music_path);
+    snprintf(fl + strlen(fl), 1000, "%d\n", (player->total_score));
+    snprintf(fl + strlen(fl), 1000, "%d\n", (player->total_gold));
+    snprintf(fl + strlen(fl), 1000, "%d\n", (player->num_finished));
+    snprintf(fl + strlen(fl), 1000, "%ld\n", (player->time_experience));
+    snprintf(fl + strlen(fl), 1000, "%d\n", (player->game_difficulty));
+    snprintf(fl + strlen(fl), 1000, "%d\n", (player->color));
+    // player->music = (Music *) malloc(sizeof(Music));
+    snprintf(fl + strlen(fl), 1000, "%s\n", player->music->music_path);
+    // fclose(player_file);
+    // delete_enter(player->music->music_path);
+
+
     // // char g[100];
     // // fscanf(player_file, "%s", g);
     // if(player->game == NULL) {
@@ -1809,9 +1809,9 @@ void save_game() {
     //     // fclose(player_file);
     // }
     
-    // FILE* player_file = fopen(player->file_path, "w");
-    // fprintf(player_file, "%s", fl);
-    // fclose(player_file);
+    FILE* player_file = fopen(player->file_path, "w");
+    fprintf(player_file, "%s", fl);
+    fclose(player_file);
 }
 
 void game_intro() {
@@ -1885,6 +1885,69 @@ void game_intro() {
     delwin(intro);
 }
 
+void game_end() {
+    WINDOW *intro = newwin(42, 148, 0, 0);
+
+    wattron(intro, COLOR_PAIR(2));
+    for(int i = 0; i < 148; i++) {
+        mvwaddch(intro, 0, i, ' ');
+    }
+    for(int i = 0; i < 148; i++) {
+        mvwaddch(intro, 41, i, ' ');
+    }
+    for(int j = 0; j < 42; j++) {
+        mvwaddch(intro, j, 0, ' ');
+    }
+    for(int j = 0; j < 42; j++) {
+        mvwaddch(intro, j, 147, ' ');
+    }
+    wattroff(intro, COLOR_PAIR(2));
+    
+    wattron(intro, A_BOLD | COLOR_PAIR(1));
+    // for(int j = 28; j < 108; j++) {
+    //     for(int i = 14; i < 20; i++) {
+    //         // move(i, j);
+    //         if(j < 71)
+    //             mvwprintw(intro, i, j, "%lc", ROGUE[i - 14][j - 28]);
+    //         else
+    //             mvwprintw(intro, i, j, "%lc", GAME[i - 14][j - 71]);
+    //     }
+    //     usleep(300 * 1000);
+    //     wrefresh(intro);
+    // }
+
+    for(int j = 0; j < 19; j++) {
+        wclear(intro);
+        wattron(intro, COLOR_PAIR(2));
+        for(int i = 0; i < 148; i++) {
+            mvwaddch(intro, 0, i, ' ');
+        }
+        for(int i = 0; i < 148; i++) {
+            mvwaddch(intro, 41, i, ' ');
+        }
+        for(int j = 0; j < 42; j++) {
+            mvwaddch(intro, j, 0, ' ');
+        }
+        for(int j = 0; j < 42; j++) {
+            mvwaddch(intro, j, 147, ' ');
+        }
+        wattroff(intro, COLOR_PAIR(2));
+
+        wattron(intro, A_BOLD | COLOR_PAIR(1));
+        for(int i = 14; i < 20; i++) {
+            // move(i, 28 - j);
+            mvwaddstr(intro, i, 10 + j, ROGUE[i - 14]);
+            // move(i, 78 + j);
+            mvwaddstr(intro, i, 96 - j, GAME[i - 14]);
+        }
+        wrefresh(intro);
+        usleep(200 * 1000);
+    }
+
+    usleep(1000 * 1000);
+    wattroff(intro, A_BOLD | COLOR_PAIR(1));
+    delwin(intro);
+}
 /*
 
     create new game

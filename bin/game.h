@@ -23,7 +23,6 @@ pid_t afplay_pid = -1;
 bool music_changed = false;
 pthread_t sound_thread;
 
-
 void play_game(Game *game);
 void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int color);
 void create_new_floor(Floor *floor, int floor_num, Game *game);
@@ -680,6 +679,8 @@ void in_room_road(Floor *floor, int floor_num) {
 
 // Playing game
 void play_game(Game *game) {
+
+    // game_won(game, player);
 
     //Initial Setups
     clear_space2();
@@ -1588,6 +1589,19 @@ void play_game(Game *game) {
         if(game->Health <= 0) {
             game_lost(game);
             break;
+        }
+        if(game->player_room == 5 && game->player_floor == 3) {
+            bool flag = true;
+            for(int i = 0; flag == true && i < game->floors[game->player_floor].Rooms[game->player_room].enemy_num; i++) {
+                if(game->floors[game->player_floor].Rooms[game->player_room].enemies[i] != NULL) {
+                    flag = false;
+                }
+            }
+
+            if(flag == true) {
+                game_won(game, player);
+                break;
+            }
         }
         time_passed++;
         

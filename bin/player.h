@@ -17,24 +17,6 @@
 #include <wchar.h>
 
 
-
-typedef struct {
-    char file_path[200];
-    char username[100];
-    char password[100];
-    char email[100];
-    int total_score;
-    int total_gold;
-    int num_finished;
-    time_t time_experience;
-    enum Difficulty game_difficulty;
-    int color;
-    Music *music;
-
-    Game *game;
-
-} Player;
-
 void new_game();
 void old_game();
 void score_table();
@@ -43,8 +25,6 @@ void delete_enter(char *s);
 void change_difficulty();
 void change_color();
 void change_music();
-
-Player *player;
 
 // Creating and playing new game
 void new_game() {

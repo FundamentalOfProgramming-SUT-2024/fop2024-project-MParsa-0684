@@ -46,9 +46,22 @@ int main() {
 
     }
 
+    // Page UI
+    start_color();    
+    clear_space();
+    bkgd(COLOR_PAIR(1));
+    noecho();
+    curs_set(FALSE);
+    refresh();
+
+
+    //Game_Intro
+    game_intro();
+
     // Starting game
     refresh();
     init_game();
+
 
     endwin();
     return 0;

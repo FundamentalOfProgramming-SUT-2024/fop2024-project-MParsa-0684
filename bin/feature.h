@@ -272,6 +272,25 @@ typedef struct Game{
     bool speed_up;
 } Game;
 
+typedef struct {
+    char file_path[200];
+    char username[100];
+    char password[100];
+    char email[100];
+    int total_score;
+    int total_gold;
+    int num_finished;
+    time_t time_experience;
+    enum Difficulty game_difficulty;
+    int color;
+    Music *music;
+
+    Game *game;
+
+} Player;
+
+Player *player;
+
 void action_game(Game *game, int dir, int time_passed);
 void whole_game(Game *game, Floor *floor, bool is_unicode);
 bool is_in_map(int y, int x);
@@ -282,6 +301,7 @@ void spells_menu(Game *game, int time_passed);
 void password_generator(Game *game, Locked_Door *locked_door, int dir);
 void game_lost(Game *game);
 void hit_enemy(Game *game, int *save_shot, bool is_a);
+void game_won(Game *game, Player *player);
 
 void action_game(Game *game, int dir, int time_passed) {
     Room *temp_room;
@@ -1395,6 +1415,41 @@ void refresh_enemy_following(Game *game) {
             }
         }
     }
+}
+
+void game_won(Game *game, Player *player) {
+    WINDOW *won = newwin(40, 146, 1, 1);
+    wattron(won, COLOR_PAIR(11) | A_BOLD);
+    wclear(won);
+    for(int ii = 0; ii < 3; ii++) {
+        for(int i = 0; i < 6; i++){
+            mvwaddstr(won, 7 + i, 55 + (ii * 14), HAPPY_FACE[i]);
+            mvwaddstr(won, 23 + i, 55 + (ii * 14), HAPPY_FACE[i]);
+        }
+    }
+
+
+    for(int i = 14; i < 20; i++) {
+        mvwaddstr(won, i, 5, ROGUE[i - 14]);
+        mvwaddstr(won, i, 100, GAME[i - 14]);
+    }
+    char str[100];
+    sprintf(str, "You earned %d Scores with %d Golds!", game->total_gold * 40, game->total_gold);
+    mvwaddstr(won, 17, 55, "Congratulations! You won the game!");
+    mvwaddstr(won, 18, 55, str);    
+    mvwaddstr(won, 19, 55, "Press any key to return to Player Menu...");    
+    wrefresh(won);
+    player->total_gold += game->total_gold;
+    player->total_score += game->total_gold * 40;
+    player->num_finished++;
+    save_game();
+
+    getch();
+    game = NULL;
+
+
+    wattroff(won, COLOR_PAIR(11) | A_BOLD);
+    delwin(won);
 }
 
 #endif
