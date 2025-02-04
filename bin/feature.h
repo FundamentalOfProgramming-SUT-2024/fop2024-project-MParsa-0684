@@ -303,7 +303,8 @@ void game_lost(Game *game);
 void hit_enemy(Game *game, int *save_shot, bool is_a);
 void game_won(Game *game, Player *player);
 void save_game();
-void help_page();
+void help_page(Game *game);
+void delete_enter(char *s);
 
 void action_game(Game *game, int dir, int time_passed) {
     Room *temp_room;
@@ -1751,8 +1752,56 @@ void save_game() {
     fclose(player_file);
 }
 
-void help_page() {
+void help_page(Game *game) {
+    WINDOW *help = newwin(40, 146, 1, 1);
+    FILE *help_file = fopen("help.txt", "r");
+    
+    wattron(help, COLOR_PAIR(1) | A_BOLD);
+    for(int i = 0; i < 37; i++) {
+        mvwaddstr(help, i, 1, BOX2[i]);
+    }
 
+    char a[100];
+    for(int i = 0; i < 26; i++) {
+        fgets(a, 100, help_file);
+        delete_enter(a);
+        mvwaddstr(help, 1 + i, 4, a);
+    }
+
+    // // fgets(a, 100, help_file);
+    for(int i = 0; i < 35; i++) {
+        fgets(a, 100, help_file);
+        delete_enter(a);
+        mvwaddstr(help, 1 + i, 67, a);
+    }
+
+    fgets(a, 100, help_file);
+    for(int i = 0; i < 12; i++) {
+        fgets(a, 100, help_file);
+        delete_enter(a);
+        mvwaddstr(help, 1 + i, 111, a);
+    }
+
+
+    wattroff(help, COLOR_PAIR(1));
+
+    wattron(help, COLOR_PAIR(8));
+    mvwaddstr(help, 38, 57, "Press any key to back to game...");
+    wattroff(help, COLOR_PAIR(8) | A_BOLD);
+
+    wrefresh(help);
+
+
+    int c = getch();
+
+    delwin(help);
+
+}
+
+void delete_enter(char *s) {
+    size_t len = strlen(s);
+    if(s[len - 1] == '\n')
+        s[len - 1] = '\0';
 }
 
 #endif

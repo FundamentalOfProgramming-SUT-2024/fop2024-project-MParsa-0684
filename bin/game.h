@@ -1235,6 +1235,11 @@ void play_game(Game *game) {
                 spells_menu(game, time_passed);
                 break;
 
+            // help page
+            case 'x':
+                help_page(game);
+                break;
+
             // for using gun
             case ' ':
                 // use bool power_up to double the damage
@@ -1847,19 +1852,26 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed,
 void *play_sound(void *arg) {
     const char *sound_file = (const char *)arg;
 
-    // Fork a child process
-    afplay_pid = fork();
-    if (afplay_pid == 0) {
-        // Child process runs afplay
-        execlp("afplay", "afplay", sound_file, (char *)NULL);
-        perror("Error executing afplay"); // If execlp fails
-        exit(1);
+    while (1) { 
+        afplay_pid = fork();  
+
+        if (afplay_pid < 0) {
+            perror("Fork failed");
+            exit(1);
+        } else if (afplay_pid == 0) {
+            execlp("afplay", "afplay", sound_file, (char *)NULL);
+            perror("Error executing afplay"); // If execlp fails
+            exit(1);
+        }
+
+        int status;
+        waitpid(afplay_pid, &status, 0);  
+
+        sleep(1);
     }
 
-    // Parent process continues (does nothing here for sound)
     return NULL;
 }
-
 
 #endif
 

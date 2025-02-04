@@ -21,7 +21,6 @@ void new_game();
 void old_game();
 void score_table();
 void settings();
-void delete_enter(char *s);
 void change_difficulty();
 void change_color();
 void change_music();
@@ -299,11 +298,6 @@ void settings() {
 
 }
 
-void delete_enter(char *s) {
-    size_t len = strlen(s);
-    if(s[len - 1] == '\n')
-        s[len - 1] = '\0';
-}
 
 // Change difficluty
 void change_difficulty() {

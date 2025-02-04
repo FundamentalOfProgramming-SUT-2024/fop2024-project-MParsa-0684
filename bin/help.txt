@@ -1,0 +1,75 @@
+KEYBOARD KEYS:
+
+    - Movement:
+
+       y     j     u
+        ↖    ↑    ↗
+
+      h ←  Move   → l
+
+        ↙    ↓    ↘
+       b     k     l
+    
+    - Key m : See the whole floor
+    - Key f : Move till reach wall
+    - Key g : Not-taking elements
+    - Key s : Search for elements in neighbor cells
+    - Key > : Go down-stairs
+    - Key < : Go up-stairs
+    - Key e : Open Food-Menu
+    - key i : Open Gun-Menu
+    - Key p : Open Spell-Menu
+    - Key x : Open Help-Page
+    - Key SPACE : Hit enemy with Gun
+    - Key a : Repeat Hitting enemy action
+    - Key c : Unicode representation
+    - Key q : Save & Quit the game (going to Player menu)
+Unicode Symbols:
+
+    - FOODS:
+        - Ordinary : 🍎
+        - Excellent : 🍰
+        - Magical : 🍇
+    
+    - GOLDS:
+        - General : 💰
+        - Black : 🛢️
+    
+    - SPELLS:
+        - Health : 🔮
+        - Speed : 🚀
+        - Damage : 💥
+    
+    - GUNS:
+        - Close Range:
+            - Mace : 🔱
+            - Sword : 🗡
+        
+        - Long Range:
+            - Dagger : 🔨
+            - Magic_Wand : 📜
+            - Normal_Arrow : 🏹
+    
+    - ENEMIES:
+        - Deamon : 😈
+        - Fire-Breathing Monster : 🐲
+        - Giant : 👻
+        - Snake : 🐍
+        - Undeed : 🐉
+
+    - PLAYER: 👾
+    - MASTER_KEY : 🔑
+
+
+Other Symbols:
+
+    - Wall : | _ 
+    - Normal_Door : +
+    - Secret_Door : *
+    - Locked_Door : @
+    - Password_Generator : &
+    - Trap : ^
+    - Room floor : .
+    - Road (between Rooms) : #
+    - Staircase : <
+    - Door to Treasure Room : {
