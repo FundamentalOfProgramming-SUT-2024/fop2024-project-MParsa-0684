@@ -1852,23 +1852,23 @@ void paint_floor(Game *game, Floor *floor, WINDOW *game_window, int time_passed,
 void *play_sound(void *arg) {
     const char *sound_file = (const char *)arg;
 
-    while (1) { 
+    // while (1) { 
         afplay_pid = fork();  
 
-        if (afplay_pid < 0) {
-            perror("Fork failed");
-            exit(1);
-        } else if (afplay_pid == 0) {
+        // if (afplay_pid < 0) {
+        //     perror("Fork failed");
+        //     exit(1);
+        if (afplay_pid == 0) {
             execlp("afplay", "afplay", sound_file, (char *)NULL);
             perror("Error executing afplay"); // If execlp fails
             exit(1);
         }
 
-        int status;
-        waitpid(afplay_pid, &status, 0);  
+        // int status;
+        // waitpid(afplay_pid, &status, 0);  
 
-        sleep(1);
-    }
+        // sleep(1);
+    // }
 
     return NULL;
 }

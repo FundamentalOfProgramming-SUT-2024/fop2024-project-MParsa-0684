@@ -11,6 +11,9 @@
         "ratio": "cpp",
         "tuple": "cpp",
         "variant": "cpp",
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "ui.h": "c",
+        "signal.h": "c",
+        "unistd.h": "c"
     }
 }
