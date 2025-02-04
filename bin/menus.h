@@ -217,7 +217,7 @@ void create_player() {
     player->total_score = 0;
     player->total_gold = 0;
     player->num_finished = 0;
-    player->game_difficulty = Easy;
+    player->game_difficulty = 0;
     player->color = COLOR_FIREBRICK;
     player->music = (Music *) malloc(sizeof(Music));
     strcpy(player->music->music_path, "../music/05 Aen Seidhe.mp3");

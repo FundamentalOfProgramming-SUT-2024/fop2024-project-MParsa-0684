@@ -228,12 +228,12 @@ void create_new_room(Room *room, Floor *floor, int floor_num, int room_num, Game
 
         case Nightmare:
         case General:
-            room->food_num = rand() % (game->game_difficulty);
-            room->gold_num = rand() % (game->game_difficulty);
+            room->food_num = rand() % (4 - game->game_difficulty);
+            room->gold_num = rand() % (4 - game->game_difficulty);
             room->gun_num = rand() % 2;
             room->spell_num = rand() % 2;
-            room->trap_num = rand() % 2;
-            room->enemy_num = rand() % 3;
+            room->trap_num = rand() % (2 + game->game_difficulty);
+            room->enemy_num = rand() % (3 + game->game_difficulty);
             break;
 
     }

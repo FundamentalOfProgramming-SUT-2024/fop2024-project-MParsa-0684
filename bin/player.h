@@ -16,7 +16,6 @@
 #include <locale.h>
 #include <wchar.h>
 
-
 void new_game();
 void old_game();
 void score_table();
@@ -24,6 +23,7 @@ void settings();
 void change_difficulty();
 void change_color();
 void change_music();
+void profile_page();
 
 // Creating and playing new game
 void new_game() {
@@ -217,12 +217,9 @@ void settings() {
     curs_set(FALSE);
     clear_space();
 
-    // Header UI
-    clear_space();
-    move(12 ,69);
     attron(A_BOLD | COLOR_PAIR(1));
-    addstr("REGUE GAME");
-    move(13 ,60);
+    profile_page();
+    move(18 ,60);
     addstr("<<<<< Player Settings >>>>>");
     attroff(A_BOLD);
 
@@ -230,16 +227,16 @@ void settings() {
     char settingsMenu[4][100] = {"Change game difficulty", "Change player color", "Change game music", "Exit"}; 
 
     for(int i = 0; i < 4; i++) {
-        move(16 + i, 63);
+        move(21 + i, 63);
         addstr(settingsMenu[i]);
     }
     refresh();
 
     // Selection Part
-    move(16, 69);
+    move(21, 69);
     void (* smenus[3]) () = {&change_difficulty, &change_color, &change_music};
     int location = 0;
-    move(16 + location, 63);
+    move(21 + location, 63);
     attron(COLOR_PAIR(2));
     addstr(settingsMenu[location]);
     attroff(COLOR_PAIR(2));
@@ -251,20 +248,21 @@ void settings() {
         //Every Move
         // Header UI
         clear_space();
-        move(12 ,69);
+        // move(17 ,69);
         attron(A_BOLD | COLOR_PAIR(1));
-        addstr("REGUE GAME");
-        move(13 ,60);
+        profile_page();
+        // addstr("REGUE GAME");
+        move(18 ,60);
         addstr("<<<<< Player Settings >>>>>");
         attroff(A_BOLD);
 
         //Page content
-        move(16 + location, 63);
+        move(21 + location, 63);
         attron(COLOR_PAIR(1));
         addstr(settingsMenu[location]);
         attroff(COLOR_PAIR(1));
         for(int i = 0; i < 4; i++) {
-            move(16 + i, 63);
+            move(21 + i, 63);
             addstr(settingsMenu[i]);
         }
         refresh();
@@ -288,7 +286,7 @@ void settings() {
                 break;
         }
 
-        move(16 + location, 63);
+        move(21 + location, 63);
         attron(COLOR_PAIR(2));
         addstr(settingsMenu[location]);
         attroff(COLOR_PAIR(2));
@@ -309,7 +307,7 @@ void change_difficulty() {
     char dMenu[3][100] = {"Easy", "Normal", "Hard"}; 
 
     for(int i = 0; i < 3; i++) {
-        move(16 + i, 88);
+        move(21 + i, 88);
         addstr(dMenu[i]);
     }
     refresh();
@@ -318,7 +316,7 @@ void change_difficulty() {
     // Selection Part
     int arr[3] = {Easy, Normal, Hard};
     int location = 0;
-    move(16 + location, 88);
+    move(21 + location, 88);
     attron(COLOR_PAIR(2));
     addstr(dMenu[location]);
     attroff(COLOR_PAIR(2));
@@ -329,19 +327,19 @@ void change_difficulty() {
 
         //Every Move
         //Page content
-        move(16 + location, 88);
+        move(21 + location, 88);
         attron(COLOR_PAIR(1));
         addstr(dMenu[location]);
         attroff(COLOR_PAIR(1));
         for(int i = 0; i < 3; i++) {
-            move(16 + i, 88);
+            move(21 + i, 88);
             addstr(dMenu[i]);
         }
         refresh();
 
         switch(cursor) {
             case KEY_ENTER:
-                player->game_difficulty = arr[location];
+                player->game_difficulty = location;
                 flag = false;
                 break;
 
@@ -355,15 +353,15 @@ void change_difficulty() {
                 break;
         }
 
-        move(16 + location, 88);
+        move(21 + location, 88);
         attron(COLOR_PAIR(1));
         addstr(dMenu[location]);
         attroff(COLOR_PAIR(1));
         for(int i = 0; i < 3; i++) {
-            move(16 + i, 88);
+            move(21 + i, 88);
             addstr(dMenu[i]);
         }
-        move(16 + location, 88);
+        move(21 + location, 88);
         attron(COLOR_PAIR(2));
         addstr(dMenu[location]);
         attroff(COLOR_PAIR(2));
@@ -387,7 +385,7 @@ void change_color() {
 
     for(int i = 0; i < 5; i++) {
         attron(COLOR_PAIR(arr[i]));
-        move(17 + i, 88);
+        move(22 + i, 88);
         addstr(colMenu[i]);
         attroff(COLOR_PAIR(arr[i]));
     }
@@ -396,7 +394,7 @@ void change_color() {
     //25
     // Selection Part
     int location = 0;
-    move(17 + location, 88);
+    move(22 + location, 88);
     attron(COLOR_PAIR(2));
     addstr(colMenu[location]);
     attroff(COLOR_PAIR(2));
@@ -407,13 +405,13 @@ void change_color() {
 
         //Every Move
         //Page content
-        // move(17 + location, 88);
+        // move(22 + location, 88);
         // attron(COLOR_PAIR(arr[location]));
         // addstr(colMenu[location]);
         // attroff(COLOR_PAIR(arr[location]));
         for(int i = 0; i < 5; i++) {
             attron(COLOR_PAIR(arr[i]));
-            move(17 + i, 88);
+            move(22 + i, 88);
             addstr(colMenu[i]);
             attroff(COLOR_PAIR(arr[i]));
         }
@@ -435,17 +433,17 @@ void change_color() {
                 break;
         }
 
-        // move(17 + location, 88);
+        // move(22 + location, 88);
         // attron(COLOR_PAIR(arr[location]));
         // addstr(colMenu[location]);
         // attroff(COLOR_PAIR(arr[location]));
         for(int i = 0; i < 5; i++) {
             attron(COLOR_PAIR(arr[i]));
-            move(17 + i, 88);
+            move(22 + i, 88);
             addstr(colMenu[i]);
             attroff(COLOR_PAIR(arr[i]));
         }
-        move(17 + location, 88);
+        move(22 + location, 88);
         attron(COLOR_PAIR(2));
         addstr(colMenu[location]);
         attroff(COLOR_PAIR(2));
@@ -495,7 +493,7 @@ void change_music() {
     strcpy(muMenu[m_size - 1], "None"); 
 
     for(int i = 0; i < m_size; i++) {
-        move(18 + i, 88);
+        move(23 + i, 88);
         addstr(muMenu[i]);
     }
     refresh();
@@ -503,7 +501,7 @@ void change_music() {
     //25
     // Selection Part
     int location = 0;
-    move(18 + location, 88);
+    move(23 + location, 88);
     attron(COLOR_PAIR(2));
     addstr(muMenu[location]);
     attroff(COLOR_PAIR(2));
@@ -514,12 +512,12 @@ void change_music() {
 
         //Every Move
         //Page content
-        move(18 + location, 88);
+        move(23 + location, 88);
         attron(COLOR_PAIR(1));
         addstr(muMenu[location]);
         attroff(COLOR_PAIR(1));
         for(int i = 0; i < m_size; i++) {
-            move(18 + i, 88);
+            move(23 + i, 88);
             addstr(muMenu[i]);
         }
         refresh();
@@ -543,15 +541,15 @@ void change_music() {
                 break;
         }
 
-        move(18 + location, 88);
+        move(23 + location, 88);
         attron(COLOR_PAIR(1));
         addstr(muMenu[location]);
         attroff(COLOR_PAIR(1));
         for(int i = 0; i < m_size; i++) {
-            move(18 + i, 88);
+            move(23 + i, 88);
             addstr(muMenu[i]);
         }
-        move(18 + location, 88);
+        move(23 + location, 88);
         attron(COLOR_PAIR(2));
         addstr(muMenu[location]);
         attroff(COLOR_PAIR(2));
@@ -562,5 +560,63 @@ void change_music() {
 
 }
 
+void profile_page() {
+
+    for(int i = 0; i < 15; i++) 
+    mvaddstr(i + 1, 2, BOX3[i]);
+
+    for(int i = 0; i < 6; i++) 
+        mvaddstr(i + 5 + 1, 10, HAPPY_FACE[i]);
+    for(int i = 0; i < 6; i++) 
+        mvaddstr(i + 5 + 1, 125, HAPPY_FACE[i]);
+
+    move(3 ,60);
+    addstr("<<<<< Player Profile >>>>>");
+
+    attroff(A_BOLD);
+    char str[100];
+    sprintf(str, "Username: %s", player->username);
+    mvaddstr(5 + 1, 27, str);
+    sprintf(str, "Password: %s", player->password);
+    mvaddstr(8 + 1, 27, str);
+    sprintf(str, "Email: %s", player->email);
+    mvaddstr(11 + 1, 27, str);
+
+    sprintf(str, "Total Score: %d", player->total_score);
+    mvaddstr(5 + 1, 51, str);
+    sprintf(str, "Total Gold: %d", player->total_gold);
+    mvaddstr(8 + 1, 51, str);
+    sprintf(str, "Number of Finished Games: %d", player->num_finished);
+    mvaddstr(11 + 1, 51, str);
+
+    time_t diff = difftime(time(NULL), player->time_experience);
+    int d = diff / 86400;
+    int h = (diff % 86400) / 3600;
+    int m = (diff % 3600) / 60;
+    int s = diff % 60;
+    char dMenu[3][100] = {"Easy", "Normal", "Hard"}; 
+    char colMenu[5][100] = {"Firebrick", "Forestgreen", "Dimgray", "Gold", "Darkorage"}; 
+    char *ptr = strrchr(player->music, '/');
+    ptr++;
+
+    sprintf(str, "Experienced Time: %.2d:%.2d:%.2d:%.2d(s)", d, h, m, s);
+    mvaddstr(5 + 1,85, str);
+    sprintf(str, "Game Difficulty: %s", dMenu[player->game_difficulty]);
+    mvaddstr(7 + 1, 85, str);
+    sprintf(str, "Player Color: %s", colMenu[player->color - 8]);
+    mvaddstr(9 + 1, 85, str);
+    sprintf(str, "Game Music: %s", ptr);
+    mvaddstr(11 + 1, 85, str);
+    
+
+    refresh();
+
+    // Header UI
+    // clear_space();
+    // move(17 ,69);
+    // addstr("REGUE GAME");
+    attron(A_BOLD);
+
+}
 
 #endif

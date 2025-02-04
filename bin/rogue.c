@@ -56,7 +56,7 @@ int main() {
 
 
     //Game_Intro
-    // game_intro();
+    game_intro();
 
     // Starting game
     refresh();
