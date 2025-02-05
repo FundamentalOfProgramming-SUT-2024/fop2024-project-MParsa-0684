@@ -65,6 +65,7 @@ Other Symbols:
 
     - Wall : | _ 
     - Normal_Door : +
+    - Window : =
     - Secret_Door : *
     - Locked_Door : @
     - Password_Generator : &
