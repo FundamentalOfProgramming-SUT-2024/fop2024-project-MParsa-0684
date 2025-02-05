@@ -15,6 +15,7 @@
 #include <locale.h>
 #include <wchar.h>
 #include <unistd.h> 
+#include <mysql/mysql.h>
 
 
 void main_menu();
@@ -27,6 +28,8 @@ int check_login(char *usern, char *passw);
 void player_menu();
 void game_intro();
 void game_end();
+MYSQL *connect_db();
+void insert_user(MYSQL *conn, const char *username, const char *email, const char *password);
 
 // Main menu of game
 void main_menu() {
@@ -220,11 +223,15 @@ void create_player() {
     player->game_difficulty = 0;
     player->color = COLOR_FIREBRICK;
     player->music = (Music *) malloc(sizeof(Music));
-    strcpy(player->music->music_path, "../music/05 Aen Seidhe.mp3");
+    strcpy(player->music->music_path, "../music/05AenSeidhe.mp3");
     player->time_experience = time(NULL);
     fprintf(player_file, "%s\n%s\n%s\n%d\n%d\n%d\n%ld\n%d\n%d\n%s\n%s\n", player->username, player->password, player->email, player->total_score, player->total_gold, player->num_finished, player->time_experience, player->game_difficulty, player->color, player->music->music_path, player->game);
     fclose(player_file);
 
+    // MYSQL
+    MYSQL *con = connect_db();
+    insert_user(con, player->username, player->password, player->email);
+    mysql_close(con);
     //adding new details
 
     player_menu();
@@ -1728,5 +1735,35 @@ void game_end() {
 
 */
 
+MYSQL *connect_db() {
+    MYSQL *conn = mysql_init(NULL);
+
+    // Check initialization
+    if (conn == NULL) {
+        printf("mysql_init() failed\n");
+        return NULL;
+    }
+
+    // Connect to MySQL (Update your password if needed)
+    if (mysql_real_connect(conn, "localhost", "root", "Parsa1384#", "GameDB", 0, NULL, 0) == NULL) {
+        printf("mysql_real_connect() failed: %s\n", mysql_error(conn));
+        mysql_close(conn);
+        return NULL;
+    }
+
+    return conn;
+}
+
+void insert_user(MYSQL *conn, const char *username, const char *email, const char *password) {
+    char query[512];
+    snprintf(query, sizeof(query), "INSERT INTO players (username, email, password) VALUES ('%s', '%s', '%s')", 
+             username, email, password);
+
+    if (mysql_query(conn, query)) {
+        printf("INSERT failed: %s\n", mysql_error(conn));
+    } else {
+        printf("User '%s' added successfully!\n", username);
+    }
+}
 
 #endif

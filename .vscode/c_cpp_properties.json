@@ -1,18 +1,19 @@
 {
     "configurations": [
-      {
-        "name": "Mac",
-        "includePath": [
-          "${workspaceFolder}/**",
-          "/opt/homebrew/Cellar/ncurses/6.5/include"
-        ],
-        "defines": [],
-        "macFrameworkPath": [],
-        "compilerPath": "/usr/bin/clang",
-        "cStandard": "c11",
-        "cppStandard": "c++17",
-        "intelliSenseMode": "macos-clang-arm64"
-      }
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/homebrew/Cellar/ncurses/6.5/include",
+                "/opt/homebrew/opt/mysql-client/include"
+            ],
+            "defines": [],
+            "macFrameworkPath": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64"
+        }
     ],
     "version": 4
-  }
+}
