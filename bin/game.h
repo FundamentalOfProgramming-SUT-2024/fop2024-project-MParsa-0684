@@ -115,7 +115,6 @@ void create_new_game(Game **game, Music *music, enum Difficulty difficulty, int 
             }
         }
     }
-    
 
     // make player's room visited for starting of the game
     for(int i = (*game)->floors[0].Rooms[(*game)->player_room].start.y; i < (*game)->floors[0].Rooms[(*game)->player_room].start.y + (*game)->floors[0].Rooms[(*game)->player_room].size.y; i++) {
@@ -1597,18 +1596,32 @@ void play_game(Game *game) {
                 
                 // Traps
                 case '^':
-                    game->Health -= 20;
+                    // game->Health -= 20;
                     move(0, 1);
                     attron(COLOR_PAIR(3) | A_BOLD);
-                    addstr("Trap decreased your Health by 20! Press any key to continue...");
+                    addstr("You are on a Trap! You will be taken to War_Room! Press any key to continue...");
 
                     getch();
                     for(int i = 0; i < 146; i++) {
                         move(0, i);
                         addch(' ');
                     }    
-
                     attroff(COLOR_PAIR(3) | A_BOLD);
+
+                    if(war_room(game, time_passed) == 0)
+                        game_lost(game);
+                    else {
+                        move(0, 1);
+                        attron(COLOR_PAIR(16) | A_BOLD);
+                        addstr("You won on the War room! Press any key to continue");
+
+                        getch();
+                        for(int i = 0; i < 146; i++) {
+                            move(0, i);
+                            addch(' ');
+                        }
+                        attroff(COLOR_PAIR(16) | A_BOLD);
+                    }
                     break;
                 
                 // Master_Key

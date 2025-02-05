@@ -304,6 +304,9 @@ void game_won(Game *game, Player *player);
 void help_page(Game *game);
 void delete_enter(char *s);
 void save_game(Player *player);
+int war_room(Game *game, int time_passed);
+int paint_war(WINDOW *war, int r, Enemy **enemies, int py, int px, Game *game);
+void war_hit_enemy(Game *game, int *save_shot, bool a, int py, int px, Enemy **enemy, int r);
 
 
 void action_game(Game *game, int dir, int time_passed) {
@@ -1876,6 +1879,661 @@ void save_game(Player *player) {
     
     // fprintf(player_file, "%s", fl);
     fclose(player_file);
+}
+
+int war_room(Game *game, int time_passed) {
+    WINDOW *war = newwin(40, 146, 1, 1);
+    int r = (rand() % 3) + 4;
+    Enemy **enemies = (Enemy **) calloc(r, sizeof(Enemy *));
+    Enemy_Type etype[5] = {Deamon, /*Fire Breathing*/Monster, Giant, Snake, Undeed};
+    for(int i = 0; i < r; i++) {
+        int et = rand() % 5;
+        enemies[i] = (Enemy *) calloc(1, sizeof(Enemy));
+        enemies[i]->type = etype[et];
+        bool flag = true;
+        while(flag) {
+            enemies[i]->location.y = rand() % (16 - 1) + 1; 
+            enemies[i]->location.x = rand() % (50 - 1) + 1; 
+            if(WAR[enemies[i]->location.y][enemies[i]->location.x] == '.') {
+                flag = false;
+                switch(enemies[i]->type) {
+                    case Deamon:
+                        enemies[i]->damage = 1;
+                        enemies[i]->health = 5;
+                        enemies[i]->following = 0;
+                        enemies[i]->chr = 'd';
+                        enemies[i]->unicode = 0x0001F608;
+                        break;
+                    case Monster:
+                        enemies[i]->damage = 2;
+                        enemies[i]->health = 10;
+                        enemies[i]->following = 0;
+                        enemies[i]->chr = 'f';
+                        enemies[i]->unicode = 0x0001F432;
+                        break;
+                    case Giant:
+                        enemies[i]->damage = 3;
+                        enemies[i]->health = 15;
+                        enemies[i]->following = 5;
+                        enemies[i]->chr = 'g';
+                        enemies[i]->unicode = 0x0001F47B;
+                        break;
+                    case Snake:
+                        enemies[i]->damage = 4;
+                        enemies[i]->health = 20;
+                        enemies[i]->following = 1000000;
+                        enemies[i]->chr = 's';
+                        enemies[i]->unicode = 0x0001F40D;
+                        break;
+                    case Undeed:
+                        enemies[i]->damage = 6;
+                        enemies[i]->health = 30;
+                        enemies[i]->following = 5;
+                        enemies[i]->chr = 'u';
+                        enemies[i]->unicode = 0x0001F409;
+                        break;
+                }
+                WAR[enemies[i]->location.y][enemies[i]->location.x] = enemies[i]->chr;
+            }
+        }
+    }
+    
+    Location player;
+    while(true) {
+        player.y = rand() % (16 - 1) + 1; 
+        player.x = rand() % (50 - 1) + 1; 
+        if(WAR[player.y][player.x] == '.')   
+            break;
+    }
+
+    int save_shot[2] = {-1, -1};
+    bool flag;
+    int dir = -1;
+
+    while(true) {
+        flag = paint_war(war, r, enemies, player.y, player.x, game);
+        if(flag == true)
+            break;
+        if(game->Health <= 0) {
+            flag = false;
+            break;
+        }
+        
+        int c = getch();
+        switch(c) {
+            // moves
+            case 'j':
+                if(game->speed_up == true) {
+                    if(player.y > 0 && 
+                    WAR[player.y - 1][player.x] != '_' && 
+                    WAR[player.y - 1][player.x] != '|' && 
+                    WAR[player.y - 1][player.x] != ' ' && 
+                    WAR[player.y - 1][player.x] != '=' &&
+                    WAR[player.y - 1][player.x] != '@' && 
+                    WAR[player.y - 1][player.x] != '+' && 
+                    WAR[player.y - 1][player.x] != '&') {
+                        player.y--;    
+                    }
+                    if(player.y > 0 && 
+                    WAR[player.y - 1][player.x] != '_' && 
+                    WAR[player.y - 1][player.x] != '|' && 
+                    WAR[player.y - 1][player.x] != ' ' && 
+                    WAR[player.y - 1][player.x] != '=' &&
+                    WAR[player.y - 1][player.x] != '@' && 
+                    WAR[player.y - 1][player.x] != '+' && 
+                    WAR[player.y - 1][player.x] != '&') {
+                        player.y--;    
+                    }
+                }
+                else if(player.y > 0 && 
+                WAR[player.y - 1][player.x] != '_' && 
+                WAR[player.y - 1][player.x] != '|' && 
+                WAR[player.y - 1][player.x] != '=' &&
+                WAR[player.y - 1][player.x] != ' ') {
+                    player.y--;
+                }
+                else
+                    beep();
+
+                dir = 0;
+                break;
+
+            case 'k':
+                if(game->speed_up == true){
+                    if(player.y < 39 && 
+                    WAR[player.y + 1][player.x] != '_' && 
+                    WAR[player.y + 1][player.x] != '|' && 
+                    WAR[player.y + 1][player.x] != ' ' && 
+                    WAR[player.y + 1][player.x] != '=' &&
+                    WAR[player.y + 1][player.x] != '@' && 
+                    WAR[player.y + 1][player.x] != '+' && 
+                    WAR[player.y + 1][player.x] != '&') {
+                        player.y++;
+                    }
+                    if(player.y < 39 && 
+                    WAR[player.y + 1][player.x] != '_' && 
+                    WAR[player.y + 1][player.x] != '|' && 
+                    WAR[player.y + 1][player.x] != ' ' && 
+                    WAR[player.y + 1][player.x] != '=' &&
+                    WAR[player.y + 1][player.x] != '@' && 
+                    WAR[player.y + 1][player.x] != '+' && 
+                    WAR[player.y + 1][player.x] != '&') {
+                        player.y++;
+                    }
+                }
+                else if(player.y < 39 && 
+                WAR[player.y + 1][player.x] != '_' && 
+                WAR[player.y + 1][player.x] != '|' && 
+                WAR[player.y + 1][player.x] != '=' &&
+                WAR[player.y + 1][player.x] != ' ') {
+                    player.y++;
+                }
+                else
+                    beep();
+
+                dir = 4;
+                break;
+
+            case  'l':
+                if(game->speed_up == true) {
+                    if(player.x < 145 && 
+                    WAR[player.y][player.x + 1] != '|' && 
+                    WAR[player.y][player.x + 1] != '_' && 
+                    WAR[player.y][player.x + 1] != ' ' && 
+                    WAR[player.y][player.x + 1] != '=' &&
+                    WAR[player.y][player.x + 1] != '@' && 
+                    WAR[player.y][player.x + 1] != '+' && 
+                    WAR[player.y][player.x + 1] != '&') {
+                        player.x++;
+                    }
+                    if(player.x < 145 && 
+                    WAR[player.y][player.x + 1] != '|' && 
+                    WAR[player.y][player.x + 1] != '_' && 
+                    WAR[player.y][player.x + 1] != ' ' && 
+                    WAR[player.y][player.x + 1] != '=' &&
+                    WAR[player.y][player.x + 1] != '@' && 
+                    WAR[player.y][player.x + 1] != '+' && 
+                    WAR[player.y][player.x + 1] != '&') {
+                        player.x++;
+                    }
+                }
+                else if(player.x < 145 && 
+                WAR[player.y][player.x + 1] != '|' && 
+                WAR[player.y][player.x + 1] != '_' && 
+                WAR[player.y][player.x + 1] != '=' &&
+                WAR[player.y][player.x + 1] != ' ') {
+                    player.x++;
+                }
+                else
+                    beep();
+
+                dir = 2;
+                break;
+            
+            case 'h':
+                if(game->speed_up == true) {
+                    if(player.x > 0 && 
+                    WAR[player.y][player.x - 1] != '|' && 
+                    WAR[player.y][player.x - 1] != '_' && 
+                    WAR[player.y][player.x - 1] != ' ' &&
+                    WAR[player.y][player.x - 1] != '=' &&
+                    WAR[player.y][player.x - 1] != '@' && 
+                    WAR[player.y][player.x - 1] != '+' && 
+                    WAR[player.y][player.x - 1] != '&') {
+                        player.x--;
+                    }
+                    if(player.x > 0 && 
+                    WAR[player.y][player.x - 1] != '|' && 
+                    WAR[player.y][player.x - 1] != '_' && 
+                    WAR[player.y][player.x - 1] != ' ' &&
+                    WAR[player.y][player.x - 1] != '=' &&
+                    WAR[player.y][player.x - 1] != '@' && 
+                    WAR[player.y][player.x - 1] != '+' && 
+                    WAR[player.y][player.x - 1] != '&') {
+                        player.x--;
+                    }
+                }
+                else if(player.x > 0 && 
+                WAR[player.y][player.x - 1] != '|' && 
+                WAR[player.y][player.x - 1] != '_' && 
+                WAR[player.y][player.x - 1] != '=' &&
+                WAR[player.y][player.x - 1] != ' ') {
+                    player.x--;
+                }
+                else
+                    beep();
+
+                dir = 6;
+                break;
+
+            case 'y':
+                if(game->speed_up == true) {
+                    if(player.x > 0 && player.y > 0 && 
+                    WAR[player.y - 1][player.x - 1] != '_' && 
+                    WAR[player.y - 1][player.x - 1] != '|' && 
+                    WAR[player.y - 1][player.x - 1] != ' ' &&
+                    WAR[player.y - 1][player.x - 1] != '=' &&
+                    WAR[player.y - 1][player.x - 1] != '@' && 
+                    WAR[player.y - 1][player.x - 1] != '+' && 
+                    WAR[player.y - 1][player.x - 1] != '&') {
+                        player.x--, player.y--;
+                    }
+                    if(player.x > 0 && player.y > 0 && 
+                    WAR[player.y - 1][player.x - 1] != '_' && 
+                    WAR[player.y - 1][player.x - 1] != '|' && 
+                    WAR[player.y - 1][player.x - 1] != ' ' &&
+                    WAR[player.y - 1][player.x - 1] != '=' &&
+                    WAR[player.y - 1][player.x - 1] != '@' && 
+                    WAR[player.y - 1][player.x - 1] != '+' && 
+                    WAR[player.y - 1][player.x - 1] != '&') {
+                        player.x--, player.y--;
+                    }
+                }
+                else if(player.x > 0 && player.y > 0 && 
+                WAR[player.y - 1][player.x - 1] != '_' && 
+                WAR[player.y - 1][player.x - 1] != '|' && 
+                WAR[player.y - 1][player.x - 1] != '=' &&
+                WAR[player.y - 1][player.x - 1] != ' ') {
+                    player.x--, player.y--;
+                }
+                else
+                    beep();
+
+                dir = 7;
+                break;
+
+            case 'u':
+                if(game->speed_up == true) {
+                    if(player.x < 145 && player.y > 0 && 
+                    WAR[player.y - 1][player.x + 1] != '_' && 
+                    WAR[player.y - 1][player.x + 1] != '|' && 
+                    WAR[player.y - 1][player.x + 1] != ' ' &&
+                    WAR[player.y - 1][player.x + 1] != '=' &&
+                    WAR[player.y - 1][player.x + 1] != '@' && 
+                    WAR[player.y - 1][player.x + 1] != '+' && 
+                    WAR[player.y - 1][player.x + 1] != '&') {
+                        player.x++, player.y--;
+                    }
+                    if(player.x < 145 && player.y > 0 && 
+                    WAR[player.y - 1][player.x + 1] != '_' && 
+                    WAR[player.y - 1][player.x + 1] != '|' && 
+                    WAR[player.y - 1][player.x + 1] != ' ' &&
+                    WAR[player.y - 1][player.x + 1] != '=' &&
+                    WAR[player.y - 1][player.x + 1] != '@' && 
+                    WAR[player.y - 1][player.x + 1] != '+' && 
+                    WAR[player.y - 1][player.x + 1] != '&') {
+                        player.x++, player.y--;
+                    }
+                }
+                else if(player.x < 145 && player.y > 0 && 
+                WAR[player.y - 1][player.x + 1] != '_' && 
+                WAR[player.y - 1][player.x + 1] != '|' && 
+                WAR[player.y - 1][player.x + 1] != '=' &&
+                WAR[player.y - 1][player.x + 1] != ' ') {
+                    player.x++, player.y--;
+                }
+                else
+                    beep();
+
+                dir = 1;
+                break;
+            
+            case 'b':
+                if(game->speed_up == true) {
+                    if(player.x > 0 && player.y < 39 && 
+                    WAR[player.y + 1][player.x - 1] != '_' && 
+                    WAR[player.y + 1][player.x - 1] != '|' && 
+                    WAR[player.y + 1][player.x - 1] != ' ' && 
+                    WAR[player.y + 1][player.x - 1] != '=' && 
+                    WAR[player.y + 1][player.x - 1] != '@' && 
+                    WAR[player.y + 1][player.x - 1] != '+' && 
+                    WAR[player.y + 1][player.x - 1] != '&') {
+                        player.x--, player.y++;
+                    }
+                    if(player.x > 0 && player.y < 39 && 
+                    WAR[player.y + 1][player.x - 1] != '_' && 
+                    WAR[player.y + 1][player.x - 1] != '|' && 
+                    WAR[player.y + 1][player.x - 1] != ' ' && 
+                    WAR[player.y + 1][player.x - 1] != '=' && 
+                    WAR[player.y + 1][player.x - 1] != '@' && 
+                    WAR[player.y + 1][player.x - 1] != '+' && 
+                    WAR[player.y + 1][player.x - 1] != '&') {
+                        player.x--, player.y++;
+                    }
+                }
+                else if(player.x > 0 && player.y < 39 && 
+                WAR[player.y + 1][player.x - 1] != '_' && 
+                WAR[player.y + 1][player.x - 1] != '|' && 
+                WAR[player.y + 1][player.x - 1] != '=' && 
+                WAR[player.y + 1][player.x - 1] != ' ') {
+                    player.x--, player.y++;
+                }
+                else
+                    beep();
+
+                dir = 5;
+                break;
+            
+            case 'n':
+                if(game->speed_up == true) {
+                    if(player.x < 145 && player.y < 39 && 
+                    WAR[player.y + 1][player.x + 1] != '_' && 
+                    WAR[player.y + 1][player.x + 1] != '|' && 
+                    WAR[player.y + 1][player.x + 1] != ' ' &&
+                    WAR[player.y + 1][player.x + 1] != '=' &&
+                    WAR[player.y + 1][player.x + 1] != '@' && 
+                    WAR[player.y + 1][player.x + 1] != '+' && 
+                    WAR[player.y + 1][player.x + 1] != '&') {
+                        player.x++, player.y++;
+                    }
+                    if(player.x < 145 && player.y < 39 && 
+                    WAR[player.y + 1][player.x + 1] != '_' && 
+                    WAR[player.y + 1][player.x + 1] != '|' && 
+                    WAR[player.y + 1][player.x + 1] != ' ' &&
+                    WAR[player.y + 1][player.x + 1] != '=' &&
+                    WAR[player.y + 1][player.x + 1] != '@' && 
+                    WAR[player.y + 1][player.x + 1] != '+' && 
+                    WAR[player.y + 1][player.x + 1] != '&') {
+                        player.x++, player.y++;
+                    }
+                }
+                else if(player.x < 145 && player.y < 39 && 
+                WAR[player.y + 1][player.x + 1] != '_' && 
+                WAR[player.y + 1][player.x + 1] != '|' && 
+                WAR[player.y + 1][player.x + 1] != '=' &&
+                WAR[player.y + 1][player.x + 1] != ' ') {
+                    player.x++, player.y++;
+                }
+                else
+                    beep();
+
+                dir = 3;
+                break;
+                        // menu for foods to eat
+            case 'e':
+                foods_menu(game, time_passed);
+                break;
+
+            // munu for guns to take
+            case 'i':
+                guns_menu(game);
+                break;
+
+            // menu for spells to use
+            case 'p':
+                spells_menu(game, time_passed);
+                break;
+
+            // help page
+            case 'x':
+                help_page(game);
+                break;
+
+            // for using gun
+            case ' ':
+                // use bool power_up to double the damage
+                war_hit_enemy(game, save_shot, false, player.y, player.x, enemies, r);
+                break;
+
+            // for repeating gun usage again
+            case 'a':
+                war_hit_enemy(game, save_shot, true,  player.y, player.x, enemies, r);
+                break;
+        }
+
+
+    }
+
+    for(int i = 0; i < r; i++)
+        free(enemies[i]);
+    free(enemies);
+
+    for(int i = 0; i < 16; i++)
+        strcpy(WAR[i], WAR2[i]);
+    delwin(war);
+    return flag;
+}
+
+int paint_war(WINDOW *war, int r, Enemy **enemies, int py, int px, Game *game) {
+    wclear(war);
+    bool flag = true;
+    for(int i = 0; i < r; i++) {
+        if(enemies[i] != NULL) {
+            flag = false;
+            int dy = py - enemies[i]->location.y;
+            int dx = px - enemies[i]->location.x;
+            if(abs(dy) <= 1 && abs(dx) <= 1) {
+                game->Health -= enemies[i]->damage;
+            }
+            else if(enemies[i]->following > 0) {
+                WAR[enemies[i]->location.y][enemies[i]->location.x] = '.';
+                if(abs(dy) > 1) {
+                    if(dy > 1) {
+                        // while(true) {
+                        if(WAR[enemies[i]->location.y + 1][enemies[i]->location.x] == '.')
+                            enemies[i]->location.y++;
+                        // }
+                    }
+                    else    
+                        // while(true) {
+                        if(WAR[enemies[i]->location.y - 1][enemies[i]->location.x] == '.')
+                            enemies[i]->location.y--;
+                        // }
+                }
+                else {
+                    if(dx > 1)
+                        // while(true) {
+                        if(WAR[enemies[i]->location.y][enemies[i]->location.x + 1] == '.')
+                            enemies[i]->location.x++;
+                        // }
+                    else
+                        // while(true) {
+                        if(WAR[enemies[i]->location.y][enemies[i]->location.x - 1] == '.')
+                            enemies[i]->location.x--;
+                            // break;
+                        // }
+                }
+                WAR[enemies[i]->location.y][enemies[i]->location.x] = enemies[i]->chr;
+                // enemies[i]->following--;
+            }
+        }
+    }
+
+    wattron(war, COLOR_PAIR(8));
+    for(int i = 12; i < 28; i++)
+        mvwaddstr(war, i, 48, WAR[i - 12]);
+
+    for(int i = 0; i < r; i++) {
+        if(enemies[i] != NULL)
+            mvwprintw(war, 12 + enemies[i]->location.y, 48 + enemies[i]->location.x, "%lc", enemies[i]->unicode);
+    }
+    wchar_t player = 0x0001F47E;
+    mvwprintw(war, 12 + py, 48 + px, "%lc", player);
+    wattroff(war, COLOR_PAIR(8));
+    wrefresh(war);
+
+    attron(COLOR_PAIR(2) | A_BOLD);
+    move(41, 0);
+    printw(" Game_Name: %s\tHealth: %d%%\tGun: %s,%d \tGold: %d\t\tMaster_Key: %d\tFloor: %d\tPress 'q' to Save & Quit the game!", game->name, game->Health, game->current_gun->name, game->current_gun->counter, game->total_gold, game->master_key_num, (game->player_floor + 1));
+    attroff(COLOR_PAIR(2) | A_BOLD);
+    return flag;
+}
+
+void war_hit_enemy(Game *game, int *save_shot, bool is_a, int py, int px, Enemy **enemies, int r) {
+    bool flag = false;
+    
+    if(game->current_gun->type == Mace || game->current_gun->type == Sword) {
+        for(int i = 0; i < 9; i++) {
+            int y = py + directions[i][1], x = px + directions[i][0];
+            if(y >= 0 && x >= 0 && y < 16 && x < 50 && 
+            (WAR[y][x] == 'd' || 
+            WAR[y][x] == 'f' || 
+            WAR[y][x] == 'g' || 
+            WAR[y][x] == 's' || 
+            WAR[y][x] == 'u')) {
+                for(int ii = 0; ii < r; ii++) {
+                    if(enemies[ii] != NULL && enemies[ii]->location.y == y && enemies[ii]->location.x == x) {
+                        if(game->current_gun->damage >= enemies[ii]->health) {
+                                WAR[y][x] = '.';
+                                enemies[ii] = NULL;
+                        }
+                        else 
+                            enemies[ii]->health -= game->current_gun->damage;
+                        flag = true;
+                    }
+                }
+            }
+        }
+    }
+    else {
+        int dir = -1;
+        if(is_a == true) {
+            if(save_shot[1] == -1) {
+                move(0, 1);
+                attron(COLOR_PAIR(3) | A_BOLD);
+                addstr("Your before direction was incorrect! It cann't be repeated! Press any key to continue...");
+
+                getch();
+                for(int i = 0; i < 146; i++) {
+                    move(0, i);
+                    addch(' ');
+                }    
+
+                attroff(COLOR_PAIR(3) | A_BOLD); 
+                return;       
+            }
+            else 
+                dir = save_shot[1];
+        }
+        else {
+            move(0, 1);
+            attron(COLOR_PAIR(3) | A_BOLD);
+            addstr("Please select a Direction to shoot the gun[j/k/h/l/y/u/b/n]...");
+
+            int c = getch();
+            for(int i = 0; i < 146; i++) {
+                move(0, i);
+                addch(' ');
+            }    
+
+            attroff(COLOR_PAIR(3) | A_BOLD);        
+
+            switch (c)
+            {
+            case 'j':
+                dir = 0;
+                break;
+            
+            case 'k':
+                dir = 4;
+                break;
+            
+            case 'l':
+                dir = 2;
+                break;
+            
+            case 'h':
+                dir = 6;
+                break;
+
+            case 'y':
+                dir = 7;
+                break;
+            
+            case 'u':
+                dir = 1;
+                break;
+            
+            case 'b':
+                dir = 5;
+                break;
+            
+            case 'n':
+                dir = 3;
+                break;
+            
+            default:
+                break;
+            }
+        }
+
+        bool where = false;
+        if(dir == -1) {
+            move(0, 1);
+            attron(COLOR_PAIR(3) | A_BOLD);
+            addstr("You've chosen wrong key! Press any key to continue...");
+
+            getch();
+            for(int i = 0; i < 146; i++) {
+                move(0, i);
+                addch(' ');
+            }    
+
+            attroff(COLOR_PAIR(3) | A_BOLD); 
+            return; 
+        }
+        else {
+            save_shot[1] = dir;
+            int y = py, x = px;
+            for(int iii = 0; iii <= game->current_gun->distance; iii++) {
+                if(WAR[y][x] == '.' ||
+                    WAR[y][x] == 'd' ||
+                    WAR[y][x] == 'f' || 
+                    WAR[y][x] == 'g' || 
+                    WAR[y][x] == 's' || 
+                    WAR[y][x] == 'u') {
+                        if(WAR[y][x] == 'd' ||
+                        WAR[y][x] == 'f' || 
+                        WAR[y][x] == 'g' || 
+                        WAR[y][x] == 's' || 
+                        WAR[y][x] == 'u') {
+                            // checked
+                            for(int ii = 0; ii < r; ii++) {
+                                if(enemies[ii] != NULL && enemies[ii]->location.y == y && enemies[ii]->location.x == x) {
+                                    if(game->current_gun->damage >= enemies[ii]->health) {
+                                            WAR[y][x] = '.';
+                                            enemies[ii] = NULL;
+                                    }
+                                    else 
+                                        enemies[ii]->health -= game->current_gun->damage;
+                                    
+                                    game->current_gun->counter--;
+                                    flag = true;
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        else {
+                            y += directions[dir][1];
+                            x += directions[dir][0];
+                        }
+                }
+                else
+                    break;
+            } 
+        }
+    }
+    
+    if(flag == true) {
+        move(0, 1);
+        attron(COLOR_PAIR(3) | A_BOLD);
+        addstr("You've hit the Enemy with your GUN, Press any key to continue...");
+        getch();
+        for(int i = 0; i < 146; i++) {
+            move(0, i);
+            addch(' ');
+        }    
+        attroff(COLOR_PAIR(3) | A_BOLD); 
+    }
+
+    if(game->current_gun->counter == 0) {
+        game->current_gun = game->gun[0];
+        for(int i = 0; i < 5; i++) {
+            if(game->gun[i] != NULL && game->gun[i]->counter == 0)
+                game->gun[i] = NULL;
+        }
+    }
 }
 
 #endif
